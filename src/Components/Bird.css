@@ -1,0 +1,56 @@
+.bird {
+    position: relative;
+}
+.bird .body {
+    position: absolute;
+    border-radius: 20%;
+}
+.bird .eye {
+    position: absolute;
+    top: 20%;
+    width: 15%;
+    height: 35%;
+    border-radius: 50% / 21%;
+}
+.bird .pupil {
+    position: absolute;
+    top: 30%;
+    width: 5%;
+    height: 15%;
+    border-radius: 50% / 20%;
+}
+.bird .beak {
+    position: absolute;
+    top: 50%;
+}
+.bird .wing1 {
+    position: absolute;
+    top: 40%;
+    width: 50%;
+    height: 50%;
+}
+.bird .wing2 {
+    position: absolute;
+    top: 40%;
+    width: 15%;
+    height: 50%;
+}
+.bird .hair {
+    position: absolute;
+    top: -10%;
+    width: 5%;
+    height: 5%;
+}
+.bird .leg {
+    position: absolute;
+    top: 100%;
+    width: 5%;
+    height: 5%;
+}
+.bird .feet {
+    position: absolute;
+    top: 105%;
+    width: 25%;
+    height: 5%;
+    border-radius: 20% 20% 0 0 / 100% 100% 0 0;
+}

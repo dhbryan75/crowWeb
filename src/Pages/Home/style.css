@@ -1,13 +1,4 @@
 .home {
     position: relative;
-}
-
-.triangle {
-    position: absolute;
-    top: 0;
-    left: 0;
-    border-top: 0;
-    border-bottom: 50px black solid;
-    border-left: 20px transparent solid;
-    border-right: 50px transparent solid;
+    background: #000;
 }
