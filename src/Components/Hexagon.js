@@ -7,7 +7,6 @@ class Hexagon extends React.Component {
             size,
             color,
             verticalRatio,
-            zIndex,
         } = this.props;
         const ratio = verticalRatio || 1;
 
@@ -18,7 +17,6 @@ class Hexagon extends React.Component {
         };
         const leftStyle = {
             position: "absolute",
-            zIndex: zIndex || 0,
             left: 0,
             top: 0,
             borderRight: `solid ${0.5 * size}px ${color}`,
@@ -27,7 +25,6 @@ class Hexagon extends React.Component {
         };
         const centerStyle = {
             position: "absolute",
-            zIndex: zIndex || 0,
             left: 0.5 * size,
             top: 0,
             width: size,
@@ -36,7 +33,6 @@ class Hexagon extends React.Component {
         };
         const rightStyle = {
             position: "absolute",
-            zIndex: zIndex || 0,
             left: 1.5 * size,
             top: 0,
             borderLeft: `solid ${0.5 * size}px ${color}`,
