@@ -4,6 +4,36 @@ import Hexagon from "../../Components/Hexagon";
 import { flamingoColors, crowColors, chickenColors, parrotColors } from "../../Assets/Constants";
 import Bird from "../../Components/Bird";
 
+import "./style.css";
+
+class BorderHexagon extends React.Component {
+    render() {
+        const {
+            size,
+            color,
+            verticalRatio,
+            borderWidth,
+        } = this.props;
+
+        const innerHexagonContainerStyle = {
+            position: "absolute",
+            left: 2 * borderWidth,
+            top: verticalRatio * 1.732 * borderWidth,
+        }
+
+        return (
+            <>
+                <Hexagon size={size} color="#000" verticalRatio={verticalRatio}/>
+                <div className="innerHexagonContainer" style={innerHexagonContainerStyle}>
+                    <Hexagon size={size - 2 * borderWidth} color={color} verticalRatio={verticalRatio}/>
+                </div>
+            </>
+        )
+    }
+}
+
+
+
 class DoubleHexagon extends React.Component {
     render() {
         const {
@@ -21,44 +51,42 @@ class DoubleHexagon extends React.Component {
             width: 3.5 * size,
             height: verticalRatio * 2.598 * size,
         };
-        const hexagon1ContainerStyle = {
+        const hexagonContainerStyle = {
             position: "absolute",
+            transition: ".5s",
+        }
+        const hexagon1ContainerStyle = {
+            ...hexagonContainerStyle,
             left: 0,
             top: -hexagon1Dy,
             zIndex: zIndex,
-            transition: ".5s",
         };
         const hexagon2ContainerStyle = {
-            position: "relative",
+            ...hexagonContainerStyle,
             left: 1.5 * size,
             top: verticalRatio * 0.866 * size - hexagon2Dy,
             zIndex: zIndex + 1,
-            transition: ".5s",
         };
 
         return (
             <div className="doubleHexagon" style={doubleHexagonStyle}>
                 <div className="hexagon1Container" style={hexagon1ContainerStyle}>
-                    <Hexagon size={0.95 * size} color={color1} verticalRatio={verticalRatio}/>
+                    {
+                        !!color1 ? 
+                        <BorderHexagon size={0.95 * size} color={color1} verticalRatio={verticalRatio} borderWidth={2}/> : 
+                        <BorderHexagon size={0.95 * size} color="#fff" verticalRatio={verticalRatio} borderWidth={2}/>
+                    }
                 </div>
                 <div className="hexagon2Container" style={hexagon2ContainerStyle}>
-                    <Hexagon size={0.95 * size} color={color2} verticalRatio={verticalRatio}/>
+                    {
+                        !!color2 ? 
+                        <BorderHexagon size={0.95 * size} color={color2} verticalRatio={verticalRatio} borderWidth={2}/> : 
+                        <BorderHexagon size={0.95 * size} color="#fff" verticalRatio={verticalRatio} borderWidth={2}/>
+                    }
                 </div>
             </div>
         );
     }
-}
-
-function randomColor() {
-    const letters = '0123456789ABCDEF';
-    let r = Math.random();
-    let g = Math.random();
-    let b = Math.random();
-    let sum = r + g + b;
-    r = Math.min(Math.floor(32 / sum * r), 15);
-    g = Math.min(Math.floor(32 / sum * g), 15);
-    b = Math.min(Math.floor(32 / sum * b), 15);
-    return `#${letters[r]}${letters[g]}${letters[b]}`;
 }
 
 function isInHexagon(x, y, w, h) {
@@ -81,15 +109,43 @@ class HexagonGrid extends React.Component {
     verticalRatio = 0.8;
     n = 10;
     m = 14;
-    width = (3 * this.n + 0.5) * this.size;
-    height = this.verticalRatio * (1.732 * this.m + 0.866) * this.size;
-    hoverDy = 40;
+    birdDy = -5;
     birdSize = 70;
+
+    hexagonInfos = [
+        {
+            x: 1,
+            y: 2,
+            z: true,
+            color: "#ff0",
+            link: "/traffic",
+            title: "Traffic",
+            desc: "Traffic simulation for rehabilitation therapy. ▪▪▪▫▫ ",
+        },
+        {
+            x: 1,
+            y: 2,
+            z: false,
+            color: "#0ff",
+            link: "/u1",
+            title: "Untitled1",
+            desc: "untitled1. ▪▪▪▫▫ ",
+        },
+        {
+            x: 1,
+            y: 3,
+            z: true,
+            color: "#f0f",
+            link: "/u2",
+            title: "Untitled2",
+            desc: "untitled2. ▪▪▪▫▫ ",
+        },
+    ];
 
     element = document.getElementsByClassName("hexagonGridContainer")[0];
 
     state = {
-        hexagonPositions: null,
+        hexagonProps: null,
         selectedX: null,
         selectedY: null,
         selectedZ: true,
@@ -99,12 +155,14 @@ class HexagonGrid extends React.Component {
         isBirdRight: true,
     }
 
-    onMouseMove = e => {
+
+
+    onClick = e => {
         if(!this.element) {
             this.element = document.getElementsByClassName("hexagonGridContainer")[0];
         }
-        let { hexagonPositions } = this.state;
-        if(!hexagonPositions) return;
+        let { hexagonProps } = this.state;
+        if(!hexagonProps) return;
 
         const w = 2 * this.size;
         const h = this.verticalRatio * 1.732 * this.size;
@@ -135,21 +193,19 @@ class HexagonGrid extends React.Component {
 
         this.setState({
             ...this.state,
-            hexagonPositions: hexagonPositions,
+            hexagonProps: hexagonProps,
             selectedX: selectedX,
             selectedY: selectedY,
             selectedZ: selectedZ,
         });
-    }
-
-    onClick = e => {
-        const { selectedX, selectedY, selectedZ } = this.state;
         console.log(selectedX, selectedY, selectedZ);
     }
 
+
+
     onKeyDown = e => {
-        const { birdX, birdY, birdZ } = this.state;
-        if(e.code === "KeyW") {
+        const { birdX, birdY, birdZ, hexagonProps } = this.state;
+        if(e.code === "KeyQ") {
             if(birdZ) {
                 if(birdX === 0 || birdY === 0) return;
                 this.setState({
@@ -166,13 +222,13 @@ class HexagonGrid extends React.Component {
                     isBirdRight: false,
                 });
             }
-        } else if(e.code === "KeyE") {
+        } else if(e.code === "KeyW") {
             if(birdY === 0) return;
             this.setState({
                 ...this.state,
                 birdY: birdY - 1,
             });
-        } else if(e.code === "KeyD") {
+        } else if(e.code === "KeyE") {
             if(birdZ) {
                 if(birdY === 0) return;
                 this.setState({
@@ -190,7 +246,7 @@ class HexagonGrid extends React.Component {
                     isBirdRight: true,
                 });
             }
-        } else if(e.code === "KeyX") {
+        } else if(e.code === "KeyD") {
             if(birdZ) {
                 this.setState({
                     ...this.state,
@@ -207,7 +263,7 @@ class HexagonGrid extends React.Component {
                     isBirdRight: true,
                 });
             }
-        } else if(e.code === "KeyZ") {
+        } else if(e.code === "KeyS") {
             if(birdY === this.m - 1) return;
             this.setState({
                 ...this.state,
@@ -232,54 +288,80 @@ class HexagonGrid extends React.Component {
                 });
             }
         } else if(e.code === "Space") {
-            e.preventDefault();
-            console.log(birdX, birdY, birdZ);
+            e.preventDefault(); 
+            let path = hexagonProps[birdX][birdY][birdZ ? "link1" : "link2"];
+            if(!path) return;
+            document.location.href = path;
         } else {
             console.log(e);
         }
     }
 
+
+
     componentDidMount() {
-        let hexagonPositions = [];
+        let hexagonProps = [];
         for(let i=0; i<this.n; i++) {
             let list = [];
             for(let j=0; j<this.m; j++) {
+                let left = i * 3 * this.size;
+                let top = j * this.verticalRatio * 1.732 * this.size;
                 list.push({
-                    left: i * 3 * this.size,
-                    top: j * this.verticalRatio * 1.732 * this.size,
-                    color1: randomColor(),
-                    color2: randomColor(),
+                    left1: left,
+                    top1: top,
+                    left2: left + 1.5 * this.size,
+                    top2: top + this.verticalRatio * 0.833 * this.size,
                 });
             }
-            hexagonPositions.push(list);
+            hexagonProps.push(list);
         }
+
+        for(let i in this.hexagonInfos) {
+            let hexagonInfo = this.hexagonInfos[i];
+            hexagonProps[hexagonInfo.x][hexagonInfo.y] = hexagonInfo.z ? {
+                ...hexagonProps[hexagonInfo.x][hexagonInfo.y],
+                color1: hexagonInfo.color,
+                link1: hexagonInfo.link,
+                title1: hexagonInfo.title,
+                desc1: hexagonInfo.desc,
+            } : {
+                ...hexagonProps[hexagonInfo.x][hexagonInfo.y],
+                color2: hexagonInfo.color,
+                link2: hexagonInfo.link,
+                title2: hexagonInfo.title,
+                desc2: hexagonInfo.desc,
+            }
+        }
+
         this.setState({
             ...this.state,
-            hexagonPositions: hexagonPositions,
+            hexagonProps: hexagonProps,
         });
     }
 
+
+
     renderHexagons = function() {
-        const { hexagonPositions, selectedX, selectedY, selectedZ } = this.state;
-        if(!hexagonPositions) return null;
+        const { hexagonProps, birdX, birdY, birdZ } = this.state;
+        if(!hexagonProps) return null;
 
         let hexagons = [];
         for(let i=0; i<this.n; i++) {
             for(let j=0; j<this.m; j++) {
-                const hexagonPosition = hexagonPositions[i][j];
+                const hexagonProp = hexagonProps[i][j];
                 const doubleHexagonContainerStyle = {
                     position: "absolute",
-                    left: hexagonPosition.left,
-                    top: hexagonPosition.top,
+                    left: hexagonProp.left1,
+                    top: hexagonProp.top1,
                 };
                 let hexagon1Dy = 0;
                 let hexagon2Dy = 0;
-                if(i === selectedX && j === selectedY) {
-                    if(selectedZ) {
-                        hexagon1Dy = this.hoverDy;
+                if(i === birdX && j === birdY) {
+                    if(birdZ) {
+                        hexagon1Dy = this.birdDy;
                     }
                     else {
-                        hexagon2Dy = this.hoverDy;
+                        hexagon2Dy = this.birdDy;
                     }
                 }
     
@@ -291,8 +373,8 @@ class HexagonGrid extends React.Component {
                     >
                         <DoubleHexagon 
                             size={this.size} 
-                            color1={hexagonPosition.color1}
-                            color2={hexagonPosition.color2}
+                            color1={hexagonProp.color1}
+                            color2={hexagonProp.color2}
                             verticalRatio={this.verticalRatio}
                             zIndex={j}
                             hexagon1Dy={hexagon1Dy}
@@ -307,57 +389,59 @@ class HexagonGrid extends React.Component {
     }
 
 
+
     render() {
         const { 
-            hexagonPositions, 
+            hexagonProps, 
             birdX, 
             birdY, 
             birdZ, 
             isBirdRight,
-            selectedX, 
-            selectedY, 
-            selectedZ,
         } = this.state;
-        if(!hexagonPositions) return null;
+        if(!hexagonProps) return null;
 
-        const gridStyle = {
-            position: "relative",
-            width: this.width,
-            height: this.height,
-        }
-
-        let birdDy = 0;
-        if(birdX === selectedX && birdY === selectedY && birdZ === selectedZ) {
-            birdDy = this.hoverDy;
-        }
+        const hexagonProp = hexagonProps[birdX][birdY];
+        
         const birdContainerStyle = {
             position: "absolute",
-            left: hexagonPositions[birdX][birdY].left + (birdZ ? 0 : 1.5 * this.size) + (0.95 * this.size - this.birdSize / 2),
-            top: hexagonPositions[birdX][birdY].top + (birdZ ? 0 : this.verticalRatio * 0.833 * this.size) - 10 - birdDy,
+            left: hexagonProp[birdZ ? "left1" : "left2"] + (0.95 * this.size - this.birdSize / 2),
+            top: hexagonProp[birdZ ? "top1" : "top2"] + 3,
             zIndex: birdY + 2,
-            transition: ".5s",
+        }
+
+        const informationStyle = {
+            display: hexagonProp[birdZ ? "color1" : "color2"] ? "flex" : "none",
+            background: hexagonProp[birdZ ? "color1" : "color2"] + "b",
         }
 
         return (
-            <div 
-                className="grid" 
-                style={gridStyle} 
-                onMouseMove={this.onMouseMove}
-                onClick={this.onClick}
-                onKeyDown={this.onKeyDown}
-                tabIndex="0"
-            >
-            {
-                this.renderHexagons()
-            }
-                <div className="birdContainer" style={birdContainerStyle}>
-                    <Bird
-                        isRight={isBirdRight}
-                        size={this.birdSize}
-                        colors={crowColors}
-                    />
+            <>
+                <div 
+                    className="grid"
+                    onClick={this.onClick}
+                    onKeyDown={this.onKeyDown}
+                    tabIndex="0"
+                >
+                    {
+                        this.renderHexagons()
+                    }
+                    <div className="birdContainer" style={birdContainerStyle}>
+                        <Bird
+                            isRight={isBirdRight}
+                            size={this.birdSize}
+                            colors={crowColors}
+                        />
+                    </div>
                 </div>
-            </div>
+                <div className="information" style={informationStyle}>
+                    <div className="title">
+                        {hexagonProps[birdX][birdY][birdZ ? "title1" : "title2"]}
+                    </div>
+                    <div className="desc">
+                        {hexagonProps[birdX][birdY][birdZ ? "desc1" : "desc2"]}
+                    </div>
+                </div>
+            </>
         );
     }
 }

@@ -1,4 +1,38 @@
 .home {
     position: relative;
-    background: #000;
+    background: #bbb;
+}
+
+.home .birdContainer {
+    transition: .5s;
+}
+
+.home .information {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 200px;
+}
+
+.home .information .title {
+    margin: 10px;
+    font-size: 40px;
+    font-weight: bold;
+    text-align: center;
+    color: #000;
+}
+
+.home .information .desc {
+    margin-left: 30px;
+    margin-right: 30px;
+    font-size: 25px;
+    font-weight: normal;
+    text-align: center;
+    color: #000;
 }
