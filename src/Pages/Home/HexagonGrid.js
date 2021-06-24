@@ -6,6 +6,37 @@ import Bird from "../../Components/Bird";
 
 import "./style.css";
 
+const hexagonInfos = [
+    {
+        x: 1,
+        y: 2,
+        z: true,
+        color: "#ff0",
+        link: "/traffic",
+        title: "Traffic",
+        desc: "Traffic simulation for rehabilitation therapy. ▪▪▪▫▫ ",
+    },
+    {
+        x: 1,
+        y: 2,
+        z: false,
+        color: "#0ff",
+        link: "/u1",
+        title: "Untitled1",
+        desc: "untitled1. ▪▪▪▫▫ ",
+    },
+    {
+        x: 1,
+        y: 3,
+        z: true,
+        color: "#f0f",
+        link: "/u2",
+        title: "Untitled2",
+        desc: "untitled2. ▪▪▪▫▫ ",
+    },
+];
+
+
 class BorderHexagon extends React.Component {
     render() {
         const {
@@ -111,36 +142,6 @@ class HexagonGrid extends React.Component {
     m = 14;
     birdDy = -5;
     birdSize = 70;
-
-    hexagonInfos = [
-        {
-            x: 1,
-            y: 2,
-            z: true,
-            color: "#ff0",
-            link: "/traffic",
-            title: "Traffic",
-            desc: "Traffic simulation for rehabilitation therapy. ▪▪▪▫▫ ",
-        },
-        {
-            x: 1,
-            y: 2,
-            z: false,
-            color: "#0ff",
-            link: "/u1",
-            title: "Untitled1",
-            desc: "untitled1. ▪▪▪▫▫ ",
-        },
-        {
-            x: 1,
-            y: 3,
-            z: true,
-            color: "#f0f",
-            link: "/u2",
-            title: "Untitled2",
-            desc: "untitled2. ▪▪▪▫▫ ",
-        },
-    ];
 
     element = document.getElementsByClassName("hexagonGridContainer")[0];
 
@@ -316,8 +317,8 @@ class HexagonGrid extends React.Component {
             hexagonProps.push(list);
         }
 
-        for(let i in this.hexagonInfos) {
-            let hexagonInfo = this.hexagonInfos[i];
+        for(let i in hexagonInfos) {
+            let hexagonInfo = hexagonInfos[i];
             hexagonProps[hexagonInfo.x][hexagonInfo.y] = hexagonInfo.z ? {
                 ...hexagonProps[hexagonInfo.x][hexagonInfo.y],
                 color1: hexagonInfo.color,

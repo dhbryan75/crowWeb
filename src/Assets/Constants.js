@@ -45,3 +45,14 @@ export const parrotColors = {
     leg: "#222",
     feet: "#ff0",
 };
+
+export const basicColors = [
+    "#000",
+    "#00f",
+    "#0f0",
+    "#0ff",
+    "#f00",
+    "#f0f",
+    "#ff0",
+    "#fff",
+];
