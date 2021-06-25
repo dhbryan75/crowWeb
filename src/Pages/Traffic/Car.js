@@ -18,7 +18,7 @@ class Car extends React.Component {
             width: width,
             height: height,
             background: colors.body,
-            borderRadius: 10,
+            borderRadius: 7,
         }
 
         return (
