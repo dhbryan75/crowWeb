@@ -4,14 +4,6 @@ import { Line } from "../../Assets/Physic2D";
 const gridGap = 5;
 const dt = 0.1;
 
-
-const QUEUED = 0;
-const NORMAL = 1;
-const LANECHANGING = 2;
-const REMOVED = -1;
-
-
-
 export class RoadInfo {
     static roadCount = 0;
 
@@ -50,6 +42,7 @@ export class RoadInfo {
         }
 
         this.carInfos = [];
+        this.trafficLightInfos = [];
     }
 
     reset = () => {
@@ -64,11 +57,12 @@ export class RoadInfo {
             }
         }
         this.carInfos = [];
+        this.trafficLightInfos = [];
     }
 
     drawGrid = () => {
         this.carInfos.forEach(carInfo => {
-            if(carInfo.state == QUEUED) return;
+            if(carInfo.isQueued()) return;
             let grid = carInfo.isForward ? this.lane12Grid : this.lane21Grid;
             let rear = Math.floor(carInfo.x / gridGap);
             let front = Math.floor((carInfo.x + carInfo.length) / gridGap);
@@ -81,6 +75,14 @@ export class RoadInfo {
                 }
             }
         });
+        this.trafficLightInfos.forEach(trafficLightInfo => {
+            if(trafficLightInfo.isOpened()) return;
+            let grid = trafficLightInfo.isForward ? this.lane12Grid : this.lane21Grid;
+            let idx = Math.floor(trafficLightInfo.x / gridGap);
+            if(0 <= idx && idx < this.gridN) {
+                grid[trafficLightInfo.lane][idx] = true;
+            }
+        });
     }
 
     toggleIsSelected = () => {
@@ -90,6 +92,11 @@ export class RoadInfo {
 
 
 
+
+const QUEUED = 0;
+const NORMAL = 1;
+const LANECHANGING = 2;
+const REMOVED = -1;
 
 export class CarInfo {
     static carCount = 0;
@@ -124,6 +131,10 @@ export class CarInfo {
 
     move = () => {
         this.x += this.v * dt;
+    }
+
+    registerCar = () => {
+        this.roadInfo.carInfos.push(this);
     }
 
     laneChange = () => {
@@ -258,15 +269,15 @@ export class CarInfo {
             this.brake();
         }
         else if(this.isDanger()) {
-            this.brake();
             this.tryLaneChange();
+            this.brake();
         }
         else if(this.isSafe()) {
             this.accelerate();
         }
         else {
-            this.deccelerate();
             this.tryLaneChange();
+            this.deccelerate();
         }
         
         this.move();
@@ -279,3 +290,37 @@ export class CarInfo {
         }
     }
 };
+
+
+export class TrafficLightInfo {
+    static trafficLightCount = 0;
+
+    constructor(roadInfo, isForward, lane, x, period, delay, duration) {
+        this.id = TrafficLightInfo.trafficLightCount++;
+        this.roadInfo = roadInfo;
+        this.isForward = isForward;
+        this.lane = lane;
+        this.x = x;
+        this.period = period;
+        this.delay = delay;
+        this.duration = duration;
+
+        this.t = period - delay;
+    }
+
+    registerTrafficLight = () => {
+        this.roadInfo.trafficLightInfos.push(this);
+    }
+
+    progress = () => {
+        this.t = (this.t + 1) % this.period;
+    }
+    
+    isOpened = () => {
+        return this.t > this.duration;
+    }
+
+    remainTime = () => {
+        return this.duration - this.t;
+    }
+}

@@ -3,7 +3,7 @@ import React from "react";
 import { delay, randomBool, randomInt } from "../../Assets/Functions";
 
 import Road from "./Road";
-import { RoadInfo, CarInfo } from "./TrafficInfo";
+import { RoadInfo, CarInfo, TrafficLightInfo } from "./TrafficInfo";
 import "./style.css";
 
 
@@ -21,12 +21,12 @@ const basicCarProps = [
         colors: {body: "#eee"},
         a: 25,
         d: 1,
-        b: 30,
+        b: 40,
         maxV: 70,
-        laneChangeMinV: 40,
+        laneChangeMinV: 50,
         laneChangeV: 0.3,
-        safeDistance: 100,
-        dangerDistance: 80,
+        safeDistance: 120,
+        dangerDistance: 90,
         initV: 30,
     }, 
     {
@@ -36,12 +36,12 @@ const basicCarProps = [
         colors: {body: "#ff8"},
         a: 25,
         d: 1,
-        b: 30,
+        b: 40,
         maxV: 70,
-        laneChangeMinV: 40,
+        laneChangeMinV: 50,
         laneChangeV: 0.3,
-        safeDistance: 100,
-        dangerDistance: 80,
+        safeDistance: 120,
+        dangerDistance: 90,
         initV: 30,
     }, 
     {
@@ -51,12 +51,12 @@ const basicCarProps = [
         colors: {body: "#8f8"},
         a: 25,
         d: 1,
-        b: 30,
+        b: 40,
         maxV: 70,
-        laneChangeMinV: 40,
+        laneChangeMinV: 50,
         laneChangeV: 0.3,
-        safeDistance: 100,
-        dangerDistance: 80,
+        safeDistance: 120,
+        dangerDistance: 90,
         initV: 30,
     }, 
     {
@@ -66,11 +66,11 @@ const basicCarProps = [
         colors: {body: "#bbb"},
         a: 20,
         d: 1,
-        b: 30,
+        b: 40,
         maxV: 60,
-        laneChangeMinV: 40,
+        laneChangeMinV: 50,
         laneChangeV: 0.2,
-        safeDistance: 100,
+        safeDistance: 120,
         dangerDistance: 70,
         initV: 30,
     }, 
@@ -81,11 +81,11 @@ const basicCarProps = [
         colors: {body: "#f88"},
         a: 15,
         d: 1,
-        b: 30,
+        b: 40,
         maxV: 55,
-        laneChangeMinV: 40,
+        laneChangeMinV: 55,
         laneChangeV: 0.15,
-        safeDistance: 100,
+        safeDistance: 120,
         dangerDistance: 60,
         initV: 30,
     }, 
@@ -118,6 +118,72 @@ var roadInfos = [
 ];
 
 var carInfos = [];
+
+var trafficLightInfos = [
+    new TrafficLightInfo(
+        roadInfos[0],
+        true,
+        0,
+        650,
+        500,
+        0,
+        200,
+    ),
+    new TrafficLightInfo(
+        roadInfos[0],
+        true,
+        1,
+        650,
+        500,
+        0,
+        200,
+    ),
+    new TrafficLightInfo(
+        roadInfos[0],
+        true,
+        2,
+        650,
+        500,
+        0,
+        200,
+    ),
+    new TrafficLightInfo(
+        roadInfos[0],
+        true,
+        3,
+        650,
+        500,
+        0,
+        200,
+    ),
+    new TrafficLightInfo(
+        roadInfos[0],
+        false,
+        0,
+        650,
+        500,
+        0,
+        300,
+    ),
+    new TrafficLightInfo(
+        roadInfos[0],
+        false,
+        1,
+        650,
+        500,
+        0,
+        300,
+    ),
+    new TrafficLightInfo(
+        roadInfos[0],
+        false,
+        2,
+        650,
+        500,
+        0,
+        300,
+    ),
+];
 
 
 
@@ -155,13 +221,19 @@ const progress = () => {
         roadInfo.reset();
     });
     carInfos.forEach(carInfo => {
-        carInfo.roadInfo.carInfos.push(carInfo);
+        carInfo.registerCar();
+    });
+    trafficLightInfos.forEach(trafficLightInfo => {
+        trafficLightInfo.registerTrafficLight();
     });
     roadInfos.forEach(roadInfo => {
         roadInfo.drawGrid();
     });
     carInfos.forEach(carInfo => {
         carInfo.progress();
+    });
+    trafficLightInfos.forEach(trafficLightInfo => {
+        trafficLightInfo.progress();
     });
 
     for(let i=carInfos.length-1; i>=0; i--) {
@@ -197,6 +269,18 @@ class TrafficPage extends React.Component {
                 };
             });
 
+            let trafficLightProps = roadInfo.trafficLightInfos.map(trafficLightInfo => {
+                return {
+                    id: trafficLightInfo.id,
+                    width: trafficLightInfo.remainTime() * 0.08,
+                    height: roadInfo.laneWidth,
+                    isOpened: trafficLightInfo.isOpened(),
+                    isForward: trafficLightInfo.isForward,
+                    lane: trafficLightInfo.lane,
+                    x: trafficLightInfo.x,
+                };
+            });
+
             return {
                 id: roadInfo.id,
                 line: roadInfo.line,
@@ -209,6 +293,7 @@ class TrafficPage extends React.Component {
                 laneBorderWidth: roadInfo.laneBorderWidth,
                 isSelected: roadInfo.isSelected,
                 carProps: carProps,
+                trafficLightProps: trafficLightProps,
             };
         });
         
@@ -267,6 +352,7 @@ class TrafficPage extends React.Component {
                         laneWidth={roadProp.laneWidth}
                         laneBorderWidth={roadProp.laneBorderWidth}
                         carProps={roadProp.carProps}
+                        trafficLightProps={roadProp.trafficLightProps}
                     />
                 </div>
             );

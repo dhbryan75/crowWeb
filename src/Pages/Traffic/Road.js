@@ -1,6 +1,7 @@
 import React from "react";
 
 import Car from "./Car";
+import TrafficLight from "./TrafficLight";
 
 class Lane extends React.Component {
     render() {
@@ -9,6 +10,7 @@ class Lane extends React.Component {
             height,
             laneBorderWidth,
             carProps,
+            trafficLightProps,
         } = this.props;
 
         const laneStyle = {
@@ -38,10 +40,29 @@ class Lane extends React.Component {
 
             return (
                 <div className="carContainer" style={carContainerStyle}>
-                    <Car 
+                    <Car
                         width={carProp.width}
                         height={carProp.height}
                         colors={carProp.colors}
+                    />
+                </div>
+            );
+        });
+
+        let trafficLights = trafficLightProps.map(trafficLightProp => {
+            const trafficLightContainerStyle = {
+                position: "absolute",
+                left: trafficLightProp.x,
+                top: 0,
+                zIndex: trafficLightProp.zIndex,
+            }
+
+            return (
+                <div className="trafficLightContainer" style={trafficLightContainerStyle}>
+                    <TrafficLight
+                        width={trafficLightProp.width}
+                        height={trafficLightProp.height}
+                        isOpened={trafficLightProp.isOpened}
                     />
                 </div>
             );
@@ -51,6 +72,7 @@ class Lane extends React.Component {
             <div className="lane" style={laneStyle}>
                 <div className="arrow" style={arrowStyle}/>
                 {cars}
+                {trafficLights}
             </div>
         );
     }
@@ -68,6 +90,7 @@ class Road extends React.Component {
             laneWidth,
             laneBorderWidth,
             carProps,
+            trafficLightProps,
         } = this.props;
 
         let isOneWay = lane12 == 0 || lane21 == 0;
@@ -128,6 +151,26 @@ class Road extends React.Component {
                 colors: carProp.colors,
                 x: carProp.x,
                 y: y,
+                zIndex: zIndex + 2,
+            });
+        });
+
+        let lanes12TrafficLightProps = [];
+        for(let i=0; i<lane12; i++) {
+            lanes12TrafficLightProps.push([]);
+        }
+        let lanes21TrafficLightProps = [];
+        for(let i=0; i<lane21; i++) {
+            lanes21TrafficLightProps.push([]);
+        }
+        trafficLightProps.forEach(trafficLightProp => {
+            let laneTrafficLightProp = trafficLightProp.isForward ? lanes12TrafficLightProps[trafficLightProp.lane] : lanes21TrafficLightProps[trafficLightProp.lane];
+            
+            laneTrafficLightProp.push({
+                width: trafficLightProp.width,
+                height: trafficLightProp.height,
+                isOpened: trafficLightProp.isOpened,
+                x: trafficLightProp.x,
                 zIndex: zIndex + 1,
             });
         });
@@ -141,6 +184,7 @@ class Road extends React.Component {
                     height={laneWidth - laneBorderWidth}
                     laneBorderWidth={isLastLane ? 0 : laneBorderWidth}
                     carProps={lanes12CarProps[i]}
+                    trafficLightProps={lanes12TrafficLightProps[i]}
                 />
             );
         }
@@ -153,6 +197,7 @@ class Road extends React.Component {
                     height={laneWidth - laneBorderWidth}
                     laneBorderWidth={isLastLane ? 0: laneBorderWidth}
                     carProps={lanes21CarProps[i]}
+                    trafficLightProps={lanes21TrafficLightProps[i]}
                 />
             );
         }

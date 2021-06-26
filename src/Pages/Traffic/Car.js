@@ -9,7 +9,6 @@ class Car extends React.Component {
         } = this.props;
 
         const carStyle = {
-            position: "relative",
             width: width,
             height: height,
         }
