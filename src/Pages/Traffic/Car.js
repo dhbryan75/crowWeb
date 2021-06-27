@@ -3,20 +3,18 @@ import React from "react";
 class Car extends React.Component {
     render() {
         const {
-            width,
-            height,
-            colors,
+            carInfo,
         } = this.props;
 
         const carStyle = {
-            width: width,
-            height: height,
+            width: carInfo.length,
+            height: carInfo.breadth,
         }
         
         const bodyStyle = {
-            width: width,
-            height: height,
-            background: colors.body,
+            width: carInfo.length,
+            height: carInfo.breadth,
+            background: carInfo.colors.body,
             borderRadius: 7,
         }
 

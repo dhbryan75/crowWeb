@@ -3,14 +3,12 @@ import React from "react";
 class TrafficLight extends React.Component {
     render() {
         const {
-            width,
-            height,
-            isOpened,
+            trafficLightInfo,
         } = this.props;
 
         const trafficLightStyle = {
-            width: isOpened ? 0 : width,
-            height: height,
+            width: trafficLightInfo.isOpened() ? 0 : trafficLightInfo.remainTime() * 0.08,
+            height: trafficLightInfo.roadInfo.laneWidth,
             background: "#f00",
         }
 
