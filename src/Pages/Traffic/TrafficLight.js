@@ -7,6 +7,10 @@ class TrafficLight extends React.Component {
         } = this.props;
 
         const trafficLightStyle = {
+            position: "absolute",
+            left: trafficLightInfo.x,
+            top: 0,
+            zIndex: trafficLightInfo.roadInfo.zIndex + 2,
             width: trafficLightInfo.isOpened() ? 0 : trafficLightInfo.remainTime() * 0.08,
             height: trafficLightInfo.roadInfo.laneWidth,
             background: "#f00",

@@ -9,21 +9,26 @@ class Road extends React.Component {
         } = this.props;
 
         const roadStyle = {
+            position: "absolute",
+            left: roadInfo.left,
+            top: roadInfo.top,
+            transform: `rotate(${roadInfo.angle}rad)`,
+            zIndex: roadInfo.zIndex,
             width: roadInfo.length,
-            height: roadInfo.laneWidth * roadInfo.lane - roadInfo.laneBorderWidth,
-            background: "#ff0",
+            height: roadInfo.breadth,
+            background: "#444",
             borderTop: `solid ${roadInfo.borderWidth}px #000`,
             borderBottom: `solid ${roadInfo.borderWidth}px #000`,
+            opacity: roadInfo.isSelected ? 0.7 : 1,
+            transition: ".5s",
         };
         
         let lanes = roadInfo.laneInfos.map(laneInfo => {
-            return (
-                <Lane laneInfo={laneInfo}/>
-            );
+            return <Lane laneInfo={laneInfo}/>
         });
 
         return (
-            <div className="road" style={roadStyle}>
+            <div className="road" style={roadStyle} onClick={roadInfo.toggleIsSelected}>
                 {lanes}
             </div>
         );

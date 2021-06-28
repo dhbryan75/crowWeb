@@ -1,4 +1,4 @@
-import { Line } from "../../Assets/Physic2D";
+import { Vector, Line } from "../../Assets/Physic2D";
 
 
 const dt = 0.1;
@@ -9,10 +9,10 @@ const LANECHANGING = 2;
 const REMOVED = -1;
 
 export class CarInfo {
-    static carCount = 0;
+    static count = 0;
 
     constructor(laneInfo, length, breadth, colors, a, d, b, maxV, laneChangeV, safeDistance, dangerDistance, initV) {
-        this.id = CarInfo.carCount++;
+        this.id = CarInfo.count++;
         this.state = QUEUED;
         
         this.laneInfo = laneInfo;
@@ -234,10 +234,10 @@ export class CarInfo {
 
 
 export class TrafficLightInfo {
-    static trafficLightCount = 0;
+    static count = 0;
 
     constructor(laneInfo, x, period, delay, duration) {
-        this.id = TrafficLightInfo.trafficLightCount++;
+        this.id = TrafficLightInfo.count++;
         this.laneInfo = laneInfo;
         this.roadInfo = laneInfo.roadInfo;
         this.x = x;
@@ -265,6 +265,97 @@ export class TrafficLightInfo {
 
 
 
+export class ConnectionInfo {
+    static count = 0;
+
+    constructor(prevLaneInfo, nextLaneInfo) {
+        this.id = ConnectionInfo.count++;
+        this.prevLaneInfo = prevLaneInfo;
+        this.nextLaneInfo = nextLaneInfo;
+        this.zIndex = (prevLaneInfo.roadInfo.zIndex + prevLaneInfo.roadInfo.zIndex) / 2;
+
+        this.breadth = prevLaneInfo.breadth;
+
+        let l1 = this.prevLaneInfo.line;
+        let l2 = this.nextLaneInfo.line;
+
+        let p = Line.intersection(l1, l2);
+        console.log(l2.a, l2.b, p.x, p.y);
+        let isOnL1 = (l1.p1.x < p.x && p.x < l1.p2.x) || (l1.p2.x < p.x && p.x < l1.p1.x);
+        let isOnL2 = (l2.p1.x < p.x && p.x < l2.p2.x) || (l2.p2.x < p.x && p.x < l2.p1.x);
+        let d1 = Vector.dist(l1.p2, p);
+        let d2 = Vector.dist(l2.p1, p);
+
+        if(isOnL1 && isOnL2) {
+            if(d1 > d2) {
+                this.length1 = 0;
+                this.length3 = d1 - d2;
+            }
+            else {
+                this.length1 = d2 - d1;
+                this.length3 = 0;
+            }
+        }
+        else if(isOnL1) {
+            this.length1 = 0;
+            this.length3 = d1 + d2;
+        }
+        else if(isOnL2) {
+            this.length1 = d1 + d2;
+            this.length3 = 0;
+        }
+        else {
+            if(d1 > d2) {
+                this.length1 = d1 - d2;
+                this.length3 = 0;
+            }
+            else {
+                this.length1 = 0;
+                this.length3 = d2 - d1;
+            }
+        }
+        let q1 = l1.p2.copy();
+        q1.add(l1.dir().mul(this.length1));
+        let r1 = q1.copy();
+        r1.add(l1.dir().rot(Math.PI / 2));
+        let m1 = new Line(q1.x, q1.y, r1.x, r1.y);
+        let q2 = l2.p1.copy();
+        q2.add(l2.dir().mul(-this.length3));
+        let r2 = q2.copy();
+        r2.add(l2.dir().rot(Math.PI / 2));
+        let m2 = new Line(q2.x, q2.y, r2.x, r2.y);
+
+        this.center = Line.intersection(m1, m2);
+        this.radius = Vector.dist(this.center, q1);
+
+        //this.center = p;
+        //this.radius = 0;
+        this.left2 = this.center.x - this.radius - this.breadth / 2;
+        this.top2 = this.center.y - this.radius - this.breadth / 2;
+
+        this.angle = m2.angle() - m1.angle();
+        this.length2 = this.radius * this.angle;
+        this.length = this.length1 + this.length2 + this.length3;
+
+        this.line1 = new Line(l1.p2.x, l1.p2.y, q1.x, q1.y);
+        let c1 = this.line1.center();
+        this.left1 = c1.x - this.length1 / 2;
+        this.top1 = c1.y - this.breadth / 2;
+        this.angle1 = this.line1.angle();
+
+        this.line3 = new Line(q2.x, q2.y, l2.p1.x, l2.p1.y);
+        let c3 = this.line3.center();
+        this.left3 = c3.x - this.length3 / 2;
+        this.top3 = c3.y - this.breadth / 2;
+        this.angle3 = this.line3.angle();
+
+        this.carInfos = [];
+        this.trafficLightInfos = [];
+    }
+}
+
+
+
 export class LaneInfo {
     static count = 0;
     
@@ -276,6 +367,13 @@ export class LaneInfo {
         this.length = roadInfo.length;
         this.breadth = roadInfo.laneWidth - roadInfo.laneBorderWidth;
         this.borderWidth = roadInfo.laneBorderWidth;
+        
+        this.left = 0;
+        this.top = laneIdx * roadInfo.laneWidth;
+
+        let vec = roadInfo.line.dir().rot(Math.PI / 2).mul(laneIdx * roadInfo.laneWidth + this.breadth / 2 - roadInfo.breadth / 2);
+        this.line = roadInfo.line.copy();
+        this.line.parallelTranslation(vec);
 
         this.carInfos = [];
         this.laneChangingCarInfos = [];
@@ -299,10 +397,10 @@ export class LaneInfo {
 
 
 export class RoadInfo {
-    static roadCount = 0;
+    static count = 0;
 
     constructor(x1, y1, x2, y2, zIndex, lane, speedLimit, borderWidth, laneWidth, laneBorderWidth) {
-        this.id = RoadInfo.roadCount++;
+        this.id = RoadInfo.count++;
         this.line = new Line(x1, y1, x2, y2);
         this.zIndex = zIndex;
         this.lane = lane;
@@ -311,9 +409,12 @@ export class RoadInfo {
         this.laneWidth = laneWidth;
         this.laneBorderWidth = laneBorderWidth;
 
-        this.center = this.line.center();
         this.length = this.line.length();
         this.breadth = laneWidth * lane - laneBorderWidth;
+
+        let c = this.line.center();
+        this.left = c.x - this.length / 2;
+        this.top = c.y - this.breadth / 2 - borderWidth;
         this.angle = this.line.angle();
 
         this.isSelected = false;

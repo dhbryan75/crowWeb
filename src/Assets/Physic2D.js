@@ -21,6 +21,10 @@ export class Vector {
         return new Vector(v1.x - v2.x, v1.y - v2.y);
     }
 
+    static dist = (v1, v2) => {
+        return Vector.dif(v1, v2).size();
+    }
+
     add = v => {
         this.x += v.x;
         this.y += v.y;
@@ -33,7 +37,7 @@ export class Vector {
     rot = angle => {
         let cos = Math.cos(angle);
         let sin = Math.sin(angle);
-        return new Vector(cos * this.x - sin * this.y, sin * this.y + cos * this.y);
+        return new Vector(cos * this.x - sin * this.y, sin * this.x + cos * this.y);
     }
 
     size = () => {
@@ -53,7 +57,28 @@ export class Line {
     constructor(x1, y1, x2, y2) {
         this.p1 = new Vector(x1, y1);
         this.p2 = new Vector(x2, y2);
-        this.d = new Vector(x2 - x1, y2 - y1);
+        this.d = Vector.dif(this.p2, this.p1);
+        this.a = this.d.x == 0 ? null : (this.d.y / this.d.x);
+        this.b = this.d.x == 0 ? null : (y1 - this.a * x1);
+    }
+
+    static intersection = (l1, l2) => {
+        if(l1.a == l2.a) {
+            return null;
+        }
+        else if(l1.a == null) {
+            let x = l1.p1.x;
+            let y = l2.a * x + l2.b;
+            return new Vector(x, y);
+        }
+        else if(l2.a == null) {
+            let x = l2.p1.x;
+            let y = l1.a * x + l1.b;
+            return new Vector(x, y);
+        }
+        let x = (l2.b - l1.b) / (l1.a - l2.a);
+        let y = l1.a * x + l1.b;
+        return new Vector(x, y);
     }
 
     center = () => {
@@ -69,7 +94,17 @@ export class Line {
     }
 
     dir = () => {
-        return this.d.mul(this.length());
+        return this.d.mul(1 / this.length());
+    }
+
+    parallelTranslation = v => {
+        this.p1.add(v);
+        this.p2.add(v);
+        this.b = this.d.x == 0 ? null : (this.p1.y - this.a * this.p1.x);
+    }
+
+    copy = () => {
+        return new Line(this.p1.x, this.p1.y, this.p2.x, this.p2.y);
     }
 }
 

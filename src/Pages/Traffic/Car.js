@@ -7,6 +7,10 @@ class Car extends React.Component {
         } = this.props;
 
         const carStyle = {
+            position: "absolute",
+            left: carInfo.x,
+            top: carInfo.y + carInfo.laneInfo.breadth / 2 - carInfo.breadth / 2,
+            zIndex: carInfo.roadInfo.zIndex + 3,
             width: carInfo.length,
             height: carInfo.breadth,
         }

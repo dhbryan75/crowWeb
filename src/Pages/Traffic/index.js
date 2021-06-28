@@ -3,7 +3,8 @@ import React from "react";
 import { delay, randomBool, randomInt } from "../../Assets/Functions";
 
 import Road from "./Road";
-import { RoadInfo, CarInfo, TrafficLightInfo } from "./TrafficInfo";
+import Connection from "./Connection";
+import { RoadInfo, CarInfo, TrafficLightInfo, ConnectionInfo } from "./TrafficInfo";
 import "./style.css";
 
 
@@ -84,24 +85,41 @@ const basicCarProps = [
 
 var roadInfos = [
     new RoadInfo(
-        -100, -100, 
-        800, 1200,
-        10, 
-        4,
-        90,
-        8,
-        40,
-        2
-    ),
-    new RoadInfo(
         -100, 800, 
         800, -100, 
         0, 
-        2, 
+        3, 
         90, 
         8,
         40,
         2,
+    ),
+    new RoadInfo(
+        1000, 300, 
+        700, 400,
+        20, 
+        3,
+        90,
+        8,
+        40,
+        2,
+    ),
+    new RoadInfo(
+        400, 900, 
+        300, 1400, 
+        20, 
+        3, 
+        90, 
+        8,
+        40,
+        2,
+    ),
+];
+
+var connectionInfos = [
+    new ConnectionInfo(
+        roadInfos[1].laneInfos[2], 
+        roadInfos[2].laneInfos[0],
     ),
 ];
 
@@ -110,28 +128,21 @@ var carInfos = [];
 var trafficLightInfos = [
     new TrafficLightInfo(
         roadInfos[0].laneInfos[0],
-        650,
+        700,
         500,
         0,
         200,
     ),
     new TrafficLightInfo(
         roadInfos[0].laneInfos[1],
-        650,
+        700,
         500,
         0,
         200,
     ),
     new TrafficLightInfo(
         roadInfos[0].laneInfos[2],
-        650,
-        500,
-        0,
-        200,
-    ),
-    new TrafficLightInfo(
-        roadInfos[0].laneInfos[3],
-        650,
+        700,
         500,
         0,
         200,
@@ -141,7 +152,7 @@ var trafficLightInfos = [
 
 
 const generateCar = () => {
-    if(randomBool(0.07)) {
+    if(randomBool(0.13)) {
         let roadInfo = roadInfos[randomInt(0, roadInfos.length)];
         let laneInfo = roadInfo.laneInfos[randomInt(0, roadInfo.laneInfos.length)];
         let carProp = basicCarProps[randomInt(0, basicCarProps.length)];
@@ -221,29 +232,16 @@ class TrafficPage extends React.Component {
         }
 
         const roads = roadInfos.map(roadInfo => {
-            const roadContainerStyle = {
-                position: "absolute",
-                left: roadInfo.center.x - roadInfo.length / 2,
-                top: roadInfo.center.y - roadInfo.breadth / 2,
-                transform: `rotate(${roadInfo.angle}rad)`,
-                zIndex: roadInfo.zIndex,
-                opacity: roadInfo.isSelected ? 0.7 : 1,
-                transition: ".5s",
-            };
+            return <Road roadInfo={roadInfo}/>
+        });
 
-            return (
-                <div
-                    className="roadContainer"
-                    style={roadContainerStyle}
-                    onClick={roadInfo.toggleIsSelected}
-                >
-                    <Road roadInfo={roadInfo}/>
-                </div>
-            );
+        const connections = connectionInfos.map(connectionInfo => {
+            return <Connection connectionInfo={connectionInfo}/>
         });
 
         return (
             <div className="traffic" style={trafficStyle}>
+                {connections}
                 {roads}
             </div>
         );
