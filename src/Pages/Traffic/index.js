@@ -3,8 +3,10 @@ import React from "react";
 import { delay, randomBool, randomInt } from "../../Assets/Functions";
 
 import Road from "./Road";
-import Connection from "./Connection";
-import { RoadInfo, CarInfo, TrafficLightInfo, ConnectionInfo } from "./TrafficInfo";
+import Conn from "./Conn";
+import Car from "./Car";
+import Control from "./Control";
+import { RoadInfo, CarInfo, ControlInfo, ConnInfo } from "./TrafficInfo";
 import "./style.css";
 
 
@@ -116,8 +118,8 @@ var roadInfos = [
     ),
 ];
 
-var connectionInfos = [
-    new ConnectionInfo(
+var connInfos = [
+    new ConnInfo(
         roadInfos[1].laneInfos[2], 
         roadInfos[2].laneInfos[0],
     ),
@@ -125,22 +127,22 @@ var connectionInfos = [
 
 var carInfos = [];
 
-var trafficLightInfos = [
-    new TrafficLightInfo(
+var controlInfos = [
+    new ControlInfo(
         roadInfos[0].laneInfos[0],
         700,
         500,
         0,
         200,
     ),
-    new TrafficLightInfo(
+    new ControlInfo(
         roadInfos[0].laneInfos[1],
         700,
         500,
         0,
         200,
     ),
-    new TrafficLightInfo(
+    new ControlInfo(
         roadInfos[0].laneInfos[2],
         700,
         500,
@@ -180,8 +182,8 @@ const progress = () => {
     carInfos.forEach(carInfo => {
         carInfo.progress();
     });
-    trafficLightInfos.forEach(trafficLightInfo => {
-        trafficLightInfo.progress();
+    controlInfos.forEach(controlInfo => {
+        controlInfo.progress();
     });
     roadInfos.forEach(roadInfo => {
         roadInfo.reset();
@@ -235,14 +237,26 @@ class TrafficPage extends React.Component {
             return <Road roadInfo={roadInfo}/>
         });
 
-        const connections = connectionInfos.map(connectionInfo => {
-            return <Connection connectionInfo={connectionInfo}/>
+        const conns = connInfos.map(connInfo => {
+            return <Conn connInfo={connInfo}/>
+        });
+
+        const cars = carInfos.filter(carInfo => {
+            return !carInfo.isQueued();
+        }).map(carInfo => {
+            return <Car carInfo={carInfo}/>
+        });
+
+        const controls = controlInfos.map(controlInfo => {
+            return <Control controlInfo={controlInfo}/>
         });
 
         return (
             <div className="traffic" style={trafficStyle}>
-                {connections}
+                {conns}
                 {roads}
+                {cars}
+                {controls}
             </div>
         );
     }

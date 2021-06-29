@@ -5,12 +5,13 @@ export class Vector {
     }
 
     static sum = l => {
-        let res = new Vector(0, 0);
-        for(let i in l) {
-            let v = l[i];
-            res.add(v);
-        }
-        return res;
+        let x = 0;
+        let y = 0;
+        l.forEach(v => {
+            x += v.x;
+            y += v.y;
+        });
+        return new Vector(x, y);
     }
 
     static avg = l => {
@@ -26,8 +27,7 @@ export class Vector {
     }
 
     add = v => {
-        this.x += v.x;
-        this.y += v.y;
+        return new Vector(this.x + v.x, this.y + v.y);
     }
 
     mul = c => {
@@ -98,30 +98,19 @@ export class Line {
     }
 
     parallelTranslation = v => {
-        this.p1.add(v);
-        this.p2.add(v);
-        this.b = this.d.x == 0 ? null : (this.p1.y - this.a * this.p1.x);
+        let p1 = this.p1.add(v);
+        let p2 = this.p2.add(v);
+        return new Line(p1.x, p1.y, p2.x, p2.y);
     }
 
     copy = () => {
         return new Line(this.p1.x, this.p1.y, this.p2.x, this.p2.y);
     }
 }
-
-export class Dot {
-    constructor(x, y, vx, vy) {
+export class Object {
+    constructor(x, y, vx, vy, m) {
         this.p = new Vector(x, y);
         this.v = new Vector(vx, vy);
-    }
-
-    move = dt => {
-        this.p.add(this.v.mul(dt));
-    }
-}
-
-export class Object extends Dot {
-    constructor(x, y, vx, vy, m) {
-        super(x, y, vx, vy);
         this.a = Vector(0, 0);
         this.m = m;
     }
@@ -131,8 +120,8 @@ export class Object extends Dot {
     }
 
     move = dt => {
-        this.v.add(this.a.mul(dt));
-        this.p.add(this.v.mul(dt));
+        this.v = this.v.add(this.a.mul(dt));
+        this.p = this.p.add(this.v.mul(dt));
     }
 }
 

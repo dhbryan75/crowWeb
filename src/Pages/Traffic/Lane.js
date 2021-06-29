@@ -1,8 +1,5 @@
 import React from "react";
 
-import Car from "./Car";
-import TrafficLight from "./TrafficLight";
-
 class Lane extends React.Component {
     render() {
         const {
@@ -10,7 +7,10 @@ class Lane extends React.Component {
         } = this.props;
 
         const laneStyle = {
-            position: "relative",
+            position: "absolute",
+            left: laneInfo.left,
+            top: laneInfo.top,
+            zIndex: laneInfo.zIndex,
             width: laneInfo.length,
             height: laneInfo.breadth,
             background: "#444",
@@ -27,21 +27,10 @@ class Lane extends React.Component {
             borderBottom: "solid 5px transparent",
         }
 
-        let cars = laneInfo.carInfos.filter(carInfo => {
-            return !carInfo.isQueued();
-        }).map(carInfo => {
-            return <Car carInfo={carInfo}/>
-        });
-
-        let trafficLights = laneInfo.trafficLightInfos.map(trafficLightInfo => {
-            return <TrafficLight trafficLightInfo={trafficLightInfo}/>
-        });
 
         return (
             <div className="lane" style={laneStyle}>
                 <div className="arrow" style={arrowStyle}/>
-                {cars}
-                {trafficLights}
             </div>
         );
     }

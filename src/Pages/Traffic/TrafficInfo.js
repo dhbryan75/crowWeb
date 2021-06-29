@@ -38,6 +38,17 @@ export class CarInfo {
         this.y = 0;
     }
 
+    updatePosition = () => {
+        let l = this.laneInfo.line;
+        let c = l.p1.add(l.dir().mul(this.x + this.length / 2));
+        if(this.state == LANECHANGING) {
+            c = c.add(l.dir().rot(Math.PI / 2).mul(this.y));
+        }
+        this.left = c.x - this.length / 2;
+        this.top = c.y - this.breadth / 2;
+        this.angle = this.laneInfo.angle;
+    }
+
     move = () => {
         this.x += this.v * dt;
     }
@@ -77,12 +88,12 @@ export class CarInfo {
     isSafe = () => {
         let carInfos = this.laneInfo.carInfos;
         carInfos = carInfos.concat(this.laneInfo.laneChangingCarInfos);
-        let trafficLightInfos = this.laneInfo.trafficLightInfos;
+        let controlInfos = this.laneInfo.controlInfos;
 
         if(this.state == LANECHANGING) {
             carInfos = carInfos.concat(this.nextLaneInfo.carInfos);
             carInfos = carInfos.concat(this.nextLaneInfo.laneChangingCarInfos);
-            trafficLightInfos = trafficLightInfos.concat(this.nextLaneInfo.trafficLightInfos);
+            controlInfos = controlInfos.concat(this.nextLaneInfo.controlInfos);
         }
 
         if(carInfos.some(carInfo => {
@@ -92,9 +103,9 @@ export class CarInfo {
             return false;
         })) return false;
 
-        if(trafficLightInfos.some(trafficLightInfo => {
-            if(trafficLightInfo.isOpened()) return false;
-            if(this.x + this.length <= trafficLightInfo.x && trafficLightInfo.x < this.x + this.length + this.safeDistance) return true;
+        if(controlInfos.some(controlInfo => {
+            if(controlInfo.isOpened()) return false;
+            if(this.x + this.length <= controlInfo.x && controlInfo.x < this.x + this.length + this.safeDistance) return true;
             return false;
         })) return false;
         
@@ -104,12 +115,12 @@ export class CarInfo {
     isDanger = () => {
         let carInfos = this.laneInfo.carInfos;
         carInfos = carInfos.concat(this.laneInfo.laneChangingCarInfos);
-        let trafficLightInfos = this.laneInfo.trafficLightInfos;
+        let controlInfos = this.laneInfo.controlInfos;
 
         if(this.state == LANECHANGING) {
             carInfos = carInfos.concat(this.nextLaneInfo.carInfos);
             carInfos = carInfos.concat(this.nextLaneInfo.laneChangingCarInfos);
-            trafficLightInfos = trafficLightInfos.concat(this.nextLaneInfo.trafficLightInfos);
+            controlInfos = controlInfos.concat(this.nextLaneInfo.controlInfos);
         }
 
         if(carInfos.some(carInfo => {
@@ -119,9 +130,9 @@ export class CarInfo {
             return false;
         })) return true;
 
-        if(trafficLightInfos.some(trafficLightInfo => {
-            if(trafficLightInfo.isOpened()) return false;
-            if(this.x + this.length <= trafficLightInfo.x && trafficLightInfo.x < this.x + this.length + this.dangerDistance) return true;
+        if(controlInfos.some(controlInfo => {
+            if(controlInfo.isOpened()) return false;
+            if(this.x + this.length <= controlInfo.x && controlInfo.x < this.x + this.length + this.dangerDistance) return true;
             return false;
         })) return true;
 
@@ -133,7 +144,7 @@ export class CarInfo {
 
         let carInfos = laneInfo.carInfos;
         carInfos = carInfos.concat(laneInfo.laneChangingCarInfos);
-        let trafficLightInfos = laneInfo.trafficLightInfos;
+        let controlInfos = laneInfo.controlInfos;
 
         if(carInfos.some(carInfo => {
             if(this.id == carInfo.id) return false;
@@ -143,9 +154,9 @@ export class CarInfo {
             return false;
         })) return false;
 
-        if(trafficLightInfos.some(trafficLightInfo => {
-            if(trafficLightInfo.isOpened()) return false;
-            if(this.x + this.length <= trafficLightInfo.x && trafficLightInfo.x < this.x + this.length + this.safeDistance) return true;
+        if(controlInfos.some(controlInfo => {
+            if(controlInfo.isOpened()) return false;
+            if(this.x + this.length <= controlInfo.x && controlInfo.x < this.x + this.length + this.safeDistance) return true;
             return false;
         })) return false;
 
@@ -226,6 +237,8 @@ export class CarInfo {
             this.laneChange();
         }
 
+        this.updatePosition();
+
         if(this.isOverflow()) {
             this.state = REMOVED;
         }
@@ -233,11 +246,11 @@ export class CarInfo {
 };
 
 
-export class TrafficLightInfo {
+export class ControlInfo {
     static count = 0;
 
     constructor(laneInfo, x, period, delay, duration) {
-        this.id = TrafficLightInfo.count++;
+        this.id = ControlInfo.count++;
         this.laneInfo = laneInfo;
         this.roadInfo = laneInfo.roadInfo;
         this.x = x;
@@ -247,7 +260,13 @@ export class TrafficLightInfo {
 
         this.t = period - delay;
 
-        laneInfo.trafficLightInfos.push(this);
+        let l = laneInfo.line;
+        let c = l.p1.add(l.dir().mul(this.x));
+        this.left = c.x;
+        this.top = c.y - this.roadInfo.laneWidth / 2;
+        this.angle = this.laneInfo.angle;
+
+        laneInfo.controlInfos.push(this);
     }
 
     progress = () => {
@@ -265,11 +284,11 @@ export class TrafficLightInfo {
 
 
 
-export class ConnectionInfo {
+export class ConnInfo {
     static count = 0;
 
     constructor(prevLaneInfo, nextLaneInfo) {
-        this.id = ConnectionInfo.count++;
+        this.id = ConnInfo.count++;
         this.prevLaneInfo = prevLaneInfo;
         this.nextLaneInfo = nextLaneInfo;
         this.zIndex = (prevLaneInfo.roadInfo.zIndex + prevLaneInfo.roadInfo.zIndex) / 2;
@@ -314,22 +333,15 @@ export class ConnectionInfo {
                 this.length3 = d2 - d1;
             }
         }
-        let q1 = l1.p2.copy();
-        q1.add(l1.dir().mul(this.length1));
-        let r1 = q1.copy();
-        r1.add(l1.dir().rot(Math.PI / 2));
+        let q1 = l1.p2.add(l1.dir().mul(this.length1));
+        let r1 = q1.add(l1.dir().rot(Math.PI / 2));
         let m1 = new Line(q1.x, q1.y, r1.x, r1.y);
-        let q2 = l2.p1.copy();
-        q2.add(l2.dir().mul(-this.length3));
-        let r2 = q2.copy();
-        r2.add(l2.dir().rot(Math.PI / 2));
+        let q2 = l2.p1.add(l2.dir().mul(-this.length3));
+        let r2 = q2.add(l2.dir().rot(Math.PI / 2));
         let m2 = new Line(q2.x, q2.y, r2.x, r2.y);
 
         this.center = Line.intersection(m1, m2);
         this.radius = Vector.dist(this.center, q1);
-
-        //this.center = p;
-        //this.radius = 0;
         this.left2 = this.center.x - this.radius - this.breadth / 2;
         this.top2 = this.center.y - this.radius - this.breadth / 2;
 
@@ -350,7 +362,7 @@ export class ConnectionInfo {
         this.angle3 = this.line3.angle();
 
         this.carInfos = [];
-        this.trafficLightInfos = [];
+        this.controlInfos = [];
     }
 }
 
@@ -370,14 +382,14 @@ export class LaneInfo {
         
         this.left = 0;
         this.top = laneIdx * roadInfo.laneWidth;
+        this.angle = roadInfo.angle;
 
         let vec = roadInfo.line.dir().rot(Math.PI / 2).mul(laneIdx * roadInfo.laneWidth + this.breadth / 2 - roadInfo.breadth / 2);
-        this.line = roadInfo.line.copy();
-        this.line.parallelTranslation(vec);
+        this.line = roadInfo.line.parallelTranslation(vec);
 
         this.carInfos = [];
         this.laneChangingCarInfos = [];
-        this.trafficLightInfos = [];
+        this.controlInfos = [];
     }
 
     leftLaneInfo = () => {
