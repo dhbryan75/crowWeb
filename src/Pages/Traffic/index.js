@@ -153,6 +153,8 @@ var controlInfos = [
 
 
 
+
+
 const generateCar = () => {
     if(randomBool(0.13)) {
         let roadInfo = roadInfos[randomInt(0, roadInfos.length)];
@@ -202,8 +204,11 @@ const progress = () => {
 
 class TrafficPage extends React.Component {
     state = {
-        roadInfos: [],
-    }
+        roadInfos: roadInfos,
+        connInfos: connInfos,
+        carInfos: carInfos,
+        controlInfos: controlInfos,
+    };
 
     init = () => {}
 
@@ -213,6 +218,9 @@ class TrafficPage extends React.Component {
             this.setState({
                 ...this.state,
                 roadInfos: roadInfos,
+                connInfos: connInfos,
+                carInfos: carInfos,
+                controlInfos: controlInfos,
             });
             await delay(15);
         }
@@ -226,7 +234,7 @@ class TrafficPage extends React.Component {
 
     render() {
         const { width, height } = this.props;
-        const { roadInfos } = this.state;
+        const { roadInfos, connInfos, carInfos, controlInfos } = this.state;
 
         const trafficStyle = {
             width: width,
@@ -253,8 +261,8 @@ class TrafficPage extends React.Component {
 
         return (
             <div className="traffic" style={trafficStyle}>
-                {conns}
                 {roads}
+                {conns}
                 {cars}
                 {controls}
             </div>

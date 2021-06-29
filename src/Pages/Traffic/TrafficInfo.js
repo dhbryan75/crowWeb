@@ -40,9 +40,10 @@ export class CarInfo {
 
     updatePosition = () => {
         let l = this.laneInfo.line;
-        let c = l.p1.add(l.dir().mul(this.x + this.length / 2));
+        let d = l.dir();
+        let c = l.p1.add(d.mul(this.x + this.length / 2));
         if(this.state == LANECHANGING) {
-            c = c.add(l.dir().rot(Math.PI / 2).mul(this.y));
+            c = c.add(d.rot(Math.PI / 2).mul(this.y));
         }
         this.left = c.x - this.length / 2;
         this.top = c.y - this.breadth / 2;
@@ -237,11 +238,12 @@ export class CarInfo {
             this.laneChange();
         }
 
-        this.updatePosition();
-
         if(this.isOverflow()) {
             this.state = REMOVED;
+            return;
         }
+
+        this.updatePosition();
     }
 };
 
