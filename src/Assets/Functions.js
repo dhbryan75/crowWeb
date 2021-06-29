@@ -9,3 +9,7 @@ export const randomBool = prob => {
 export const randomInt = (n, m) => {
     return n + Math.floor(Math.random() * m);
 };
+
+export const randomSelect = l => {
+    return l[randomInt(0, l.length)];
+}

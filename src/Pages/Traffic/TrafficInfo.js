@@ -1,7 +1,5 @@
 import { Vector, Line } from "../../Assets/Physic2D";
-
-
-const dt = 0.1;
+import { randomBool, randomSelect } from "../../Assets/Functions";
 
 const QUEUED = 0;
 const NORMAL = 1;
@@ -50,7 +48,7 @@ export class CarInfo {
         this.angle = this.laneInfo.angle;
     }
 
-    move = () => {
+    move = dt => {
         this.x += this.v * dt;
     }
 
@@ -61,7 +59,7 @@ export class CarInfo {
         }
     }
 
-    laneChange = () => {
+    laneChange = dt => {
         this.laneChangeRate += this.laneChangeV * dt;
         this.y = this.roadInfo.laneWidth * this.laneChangeRate * (this.nextLaneInfo.laneIdx - this.laneInfo.laneIdx);
         if(this.laneChangeRate >= 1) {
@@ -142,6 +140,7 @@ export class CarInfo {
 
     isChangable = laneInfo => {
         if(!laneInfo) return false;
+        if(laneInfo.length < this.x + this.length + this.safeDistance) return false;
 
         let carInfos = laneInfo.carInfos;
         carInfos = carInfos.concat(laneInfo.laneChangingCarInfos);
@@ -168,17 +167,17 @@ export class CarInfo {
         return this.v > this.roadInfo.speedLimit;
     }
 
-    accelerate = () => {
+    accelerate = dt => {
         this.v += this.a * dt;
         this.v = Math.min(this.v, this.maxV, this.roadInfo.speedLimit);
     }
 
-    deccelerate = () => {
+    deccelerate = dt => {
         this.v -= this.d * dt;
         this.v = Math.max(this.v, 0);
     }
 
-    brake = () => {
+    brake = dt => {
         this.v -= this.b * dt;
         this.v = Math.max(this.v, 0);
     }
@@ -193,10 +192,12 @@ export class CarInfo {
         if(this.isChangable(this.laneInfo.leftLaneInfo())) {
             this.state = LANECHANGING;
             this.nextLaneInfo = this.laneInfo.leftLaneInfo();
+            this.nextLaneInfo.laneChangingCarInfos.push(this);
         }
         else if(this.isChangable(this.laneInfo.rightLaneInfo())) {
             this.state = LANECHANGING;
             this.nextLaneInfo = this.laneInfo.rightLaneInfo();
+            this.nextLaneInfo.laneChangingCarInfos.push(this);
         }
     }
 
@@ -208,7 +209,7 @@ export class CarInfo {
         return this.state == QUEUED;
     }
 
-    progress = () => {
+    progress = (dt) => {
         if(this.state == QUEUED) {
             if(this.isReady()) {
                 this.state = NORMAL;
@@ -219,23 +220,23 @@ export class CarInfo {
         }
 
         if(this.isSpeeding()) {
-            this.brake();
+            this.brake(dt);
         }
         else if(this.isDanger()) {
             this.tryLaneChange();
-            this.brake();
+            this.brake(dt);
         }
         else if(this.isSafe()) {
-            this.accelerate();
+            this.accelerate(dt);
         }
         else {
             this.tryLaneChange();
-            this.deccelerate();
+            this.deccelerate(dt);
         }
         
-        this.move();
+        this.move(dt);
         if(this.state == LANECHANGING) {
-            this.laneChange();
+            this.laneChange(dt);
         }
 
         if(this.isOverflow()) {
@@ -293,6 +294,8 @@ export class ConnInfo {
         this.id = ConnInfo.count++;
         this.prevLaneInfo = prevLaneInfo;
         this.nextLaneInfo = nextLaneInfo;
+        prevLaneInfo.nextConnInfo = this;
+        nextLaneInfo.prevConnInfo = this;
         this.zIndex = (prevLaneInfo.roadInfo.zIndex + prevLaneInfo.roadInfo.zIndex) / 2;
 
         this.breadth = prevLaneInfo.breadth;
@@ -392,6 +395,8 @@ export class LaneInfo {
         this.carInfos = [];
         this.laneChangingCarInfos = [];
         this.controlInfos = [];
+        this.prevConnInfo = null;
+        this.nextConnInfo = null;
     }
 
     leftLaneInfo = () => {
@@ -450,3 +455,113 @@ export class RoadInfo {
     }
 };
 
+
+
+export class CarGenInfo {
+    static count = 0;
+
+    static carProps = [
+        {
+            name: "whiteCar",
+            length: 70,
+            breadth: 28,
+            colors: {body: "#eee"},
+            a: 25,
+            d: 1,
+            b: 40,
+            maxV: 70,
+            laneChangeV: 0.3,
+            safeDistance: 120,
+            dangerDistance: 90,
+            initV: 30,
+        }, 
+        {
+            name: "yellowCar",
+            length: 70,
+            breadth: 28,
+            colors: {body: "#ff8"},
+            a: 25,
+            d: 1,
+            b: 40,
+            maxV: 70,
+            laneChangeV: 0.3,
+            safeDistance: 120,
+            dangerDistance: 90,
+            initV: 30,
+        }, 
+        {
+            name: "greenCar",
+            length: 70,
+            breadth: 28,
+            colors: {body: "#8f8"},
+            a: 25,
+            d: 1,
+            b: 40,
+            maxV: 70,
+            laneChangeV: 0.3,
+            safeDistance: 120,
+            dangerDistance: 90,
+            initV: 30,
+        }, 
+        {
+            name: "grayTruck",
+            length: 90,
+            breadth: 29,
+            colors: {body: "#bbb"},
+            a: 20,
+            d: 1,
+            b: 40,
+            maxV: 60,
+            laneChangeV: 0.2,
+            safeDistance: 100,
+            dangerDistance: 70,
+            initV: 30,
+        }, 
+        {
+            name: "redBus",
+            length: 150,
+            breadth: 30,
+            colors: {body: "#f88"},
+            a: 15,
+            d: 1,
+            b: 40,
+            maxV: 55,
+            laneChangeV: 0.15,
+            safeDistance: 90,
+            dangerDistance: 60,
+            initV: 30,
+        }, 
+    ];
+
+    constructor(laneInfo, prob) {
+        this.id = CarGenInfo.count++;
+        
+        this.laneInfo = laneInfo;
+        this.prob = prob;
+    }
+
+    generateCar = carInfos => {
+        if(!this.isValid()) return;
+        if(!randomBool(this.prob)) return;
+
+        let carProp = randomSelect(CarGenInfo.carProps);
+        carInfos.push(new CarInfo(
+            this.laneInfo, 
+            carProp.length,
+            carProp.breadth,
+            carProp.colors,
+            carProp.a,
+            carProp.d,
+            carProp.b,
+            carProp.maxV,
+            carProp.laneChangeV,
+            carProp.safeDistance,
+            carProp.dangerDistance,
+            carProp.initV,
+        ));
+    }
+
+    isValid = () => {
+        return !this.laneInfo.prevConnInfo;
+    }
+}

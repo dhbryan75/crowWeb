@@ -1,89 +1,16 @@
 import React from "react";
 
-import { delay, randomBool, randomInt } from "../../Assets/Functions";
+import { delay } from "../../Assets/Functions";
 
 import Road from "./Road";
 import Conn from "./Conn";
 import Car from "./Car";
 import Control from "./Control";
-import { RoadInfo, CarInfo, ControlInfo, ConnInfo } from "./TrafficInfo";
+import { RoadInfo, CarGenInfo, ControlInfo, ConnInfo } from "./TrafficInfo";
 import "./style.css";
 
 
-
-const basicCarProps = [
-    {
-        name: "whiteCar",
-        length: 70,
-        breadth: 28,
-        colors: {body: "#eee"},
-        a: 25,
-        d: 1,
-        b: 40,
-        maxV: 70,
-        laneChangeV: 0.3,
-        safeDistance: 120,
-        dangerDistance: 90,
-        initV: 30,
-    }, 
-    {
-        name: "yellowCar",
-        length: 70,
-        breadth: 28,
-        colors: {body: "#ff8"},
-        a: 25,
-        d: 1,
-        b: 40,
-        maxV: 70,
-        laneChangeV: 0.3,
-        safeDistance: 120,
-        dangerDistance: 90,
-        initV: 30,
-    }, 
-    {
-        name: "greenCar",
-        length: 70,
-        breadth: 28,
-        colors: {body: "#8f8"},
-        a: 25,
-        d: 1,
-        b: 40,
-        maxV: 70,
-        laneChangeV: 0.3,
-        safeDistance: 120,
-        dangerDistance: 90,
-        initV: 30,
-    }, 
-    {
-        name: "grayTruck",
-        length: 90,
-        breadth: 29,
-        colors: {body: "#bbb"},
-        a: 20,
-        d: 1,
-        b: 40,
-        maxV: 60,
-        laneChangeV: 0.2,
-        safeDistance: 100,
-        dangerDistance: 70,
-        initV: 30,
-    }, 
-    {
-        name: "redBus",
-        length: 150,
-        breadth: 30,
-        colors: {body: "#f88"},
-        a: 15,
-        d: 1,
-        b: 40,
-        maxV: 55,
-        laneChangeV: 0.15,
-        safeDistance: 90,
-        dangerDistance: 60,
-        initV: 30,
-    }, 
-];
-
+const dt = 0.1;
 
 var roadInfos = [
     new RoadInfo(
@@ -152,37 +79,32 @@ var controlInfos = [
 ];
 
 
-
-
-
-const generateCar = () => {
-    if(randomBool(0.13)) {
-        let roadInfo = roadInfos[randomInt(0, roadInfos.length)];
-        let laneInfo = roadInfo.laneInfos[randomInt(0, roadInfo.laneInfos.length)];
-        let carProp = basicCarProps[randomInt(0, basicCarProps.length)];
-        carInfos.push(new CarInfo(
-            laneInfo, 
-            carProp.length,
-            carProp.breadth,
-            carProp.colors,
-            carProp.a,
-            carProp.d,
-            carProp.b,
-            carProp.maxV,
-            carProp.laneChangeV,
-            carProp.safeDistance,
-            carProp.dangerDistance,
-            carProp.initV,
-        ));
-    }
-};
+var carGenInfos = [
+    new CarGenInfo(
+        roadInfos[0].laneInfos[0],
+        0.02,
+    ),
+    new CarGenInfo(
+        roadInfos[0].laneInfos[1],
+        0.01,
+    ),
+    new CarGenInfo(
+        roadInfos[0].laneInfos[2],
+        0.02,
+    ),
+    new CarGenInfo(
+        roadInfos[1].laneInfos[2],
+        0.1,
+    ),
+];
 
 
 const progress = () => {
-    generateCar();
-
+    carGenInfos.forEach(carGenInfo => {
+        carGenInfo.generateCar(carInfos);
+    });
     carInfos.forEach(carInfo => {
-        carInfo.progress();
+        carInfo.progress(dt);
     });
     controlInfos.forEach(controlInfo => {
         controlInfo.progress();
