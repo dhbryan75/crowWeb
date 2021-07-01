@@ -11,5 +11,6 @@ export const randomInt = (n, m) => {
 };
 
 export const randomSelect = l => {
+    if(l.length == 0) return null;
     return l[randomInt(0, l.length)];
 }

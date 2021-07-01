@@ -11,11 +11,11 @@ class Control extends React.Component {
             left: controlInfo.left,
             top: controlInfo.top,
             transform: `rotate(${controlInfo.angle}rad)`,
-            zIndex: controlInfo.roadInfo.zIndex + 2,
-            width: controlInfo.isOpened() ? 0 : controlInfo.remainTime() * 0.08,
-            height: controlInfo.laneInfo.breadth,
-            borderRadius: 3,
-            background: "#f00",
+            zIndex: controlInfo.zIndex,
+            width: controlInfo.width(),
+            height: controlInfo.width(),
+            borderRadius: "50%",
+            background: controlInfo.isOpened() ? "#0f0" : "#f00",
         }
 
         return (

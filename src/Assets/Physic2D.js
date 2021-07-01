@@ -26,6 +26,14 @@ export class Vector {
         return Vector.dif(v1, v2).size();
     }
 
+    static innerProd = (v1, v2) => {
+        return v1.x * v2.x + v1.y * v2.y;
+    }
+
+    static outerProd = (v1, v2) => {
+        return v1.x * v2.y - v1.y * v2.x;
+    }
+
     add = v => {
         return new Vector(this.x + v.x, this.y + v.y);
     }
@@ -38,6 +46,10 @@ export class Vector {
         let cos = Math.cos(angle);
         let sin = Math.sin(angle);
         return new Vector(cos * this.x - sin * this.y, sin * this.x + cos * this.y);
+    }
+
+    dir = () => {
+        return this.mul(1 / this.size());
     }
 
     size = () => {

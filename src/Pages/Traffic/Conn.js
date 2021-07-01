@@ -42,32 +42,23 @@ class Conn extends React.Component {
                 background: "#444",
             };
         }
-        
-        let cars1 = [];
-        let cars2 = [];
-        let cars3 = [];
-        connInfo.carInfos.forEach(carInfo => {
-            cars1.push(<Car carInfo={carInfo}/>);
-        });
 
         return (
             <>
-                {
-                    connInfo.length3 > 0 &&
-                    <div className="line3" style={line3Style}>
-                        {cars3}
-                    </div>
-                }
-                <div className="line2" style={line2Style}>
-                    {cars2}
-                </div>
-                {
+                {/*
                     connInfo.length1 > 0 &&
                     <div className="line1" style={line1Style}>
-                        {cars1}
                     </div>
-                }
+                */}
+                {/*<div className="line2" style={line2Style}>
+                </div>*/}
+                {/*
+                    connInfo.length3 > 0 &&
+                    <div className="line3" style={line3Style}>
+                    </div>
+                */}
             </>
+            
         );
     }
 }

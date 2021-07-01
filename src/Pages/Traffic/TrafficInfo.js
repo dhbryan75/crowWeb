@@ -2,8 +2,9 @@ import { Vector, Line } from "../../Assets/Physic2D";
 import { randomBool, randomSelect } from "../../Assets/Functions";
 
 const QUEUED = 0;
-const NORMAL = 1;
+const ONLANE = 1;
 const LANECHANGING = 2;
+const ONCONN = 3;
 const REMOVED = -1;
 
 export class CarInfo {
@@ -34,18 +35,51 @@ export class CarInfo {
         this.nextLaneInfo = laneInfo;
         this.laneChangeRate = 0;
         this.y = 0;
+
+        this.connInfo = null;
+        this.destConnInfo = randomSelect(laneInfo.nextInfos);
     }
 
     updatePosition = () => {
-        let l = this.laneInfo.line;
-        let d = l.dir();
-        let c = l.p1.add(d.mul(this.x + this.length / 2));
-        if(this.state == LANECHANGING) {
-            c = c.add(d.rot(Math.PI / 2).mul(this.y));
+        let p;
+        if(this.state == ONCONN) {
+            p = this.connInfo.getPosition(this.x, this.length, this.breadth);
         }
-        this.left = c.x - this.length / 2;
-        this.top = c.y - this.breadth / 2;
-        this.angle = this.laneInfo.angle;
+        else {
+            p = this.laneInfo.getPosition(this.x, this.y, this.length, this.breadth);
+        }
+        this.left = p.left;
+        this.top = p.top;
+        this.angle = p.angle;
+        this.zIndex = p.zIndex + 3;
+    }
+
+    updateLane = () => {
+        if(this.state == ONCONN) {
+            if(this.x > this.connInfo.length) {
+                this.state = ONLANE;
+                this.laneInfo = this.connInfo.nextInfo;
+                this.roadInfo = this.laneInfo.roadInfo;
+                this.destConnInfo = randomSelect(this.laneInfo.nextInfos);
+                this.x = 0;
+                this.laneChangeRate = 0;
+                this.y = 0;
+            }
+        }
+        else {
+            if(this.x > this.laneInfo.length) {
+                if(!!this.destConnInfo) {
+                    this.state = ONCONN;
+                    this.connInfo = this.destConnInfo;
+                    this.x = 0;
+                    this.laneChangeRate = 0;
+                    this.y = 0;
+                }
+                else {
+                    this.state = REMOVED;
+                }
+            }
+        }
     }
 
     move = dt => {
@@ -53,9 +87,14 @@ export class CarInfo {
     }
 
     registerCar = () => {
-        this.laneInfo.carInfos.push(this);
-        if(this.state == LANECHANGING) {
-            this.nextLaneInfo.laneChangingCarInfos.push(this);
+        if(this.state == ONCONN) {
+            this.connInfo.carInfos.push(this);
+        }
+        else {
+            this.laneInfo.carInfos.push(this);
+            if(this.state == LANECHANGING) {
+                this.nextLaneInfo.laneChangingCarInfos.push(this);
+            }
         }
     }
 
@@ -63,7 +102,7 @@ export class CarInfo {
         this.laneChangeRate += this.laneChangeV * dt;
         this.y = this.roadInfo.laneWidth * this.laneChangeRate * (this.nextLaneInfo.laneIdx - this.laneInfo.laneIdx);
         if(this.laneChangeRate >= 1) {
-            this.state = NORMAL;
+            this.state = ONLANE;
             this.laneInfo = this.nextLaneInfo;
             this.laneChangeRate = 0;
             this.y = 0;
@@ -77,70 +116,118 @@ export class CarInfo {
         if(carInfos.some(carInfo => {
             if(this.id == carInfo.id) return false;
             if(carInfo.isQueued()) return false;
-            if(this.x <= carInfo.x && carInfo.x < this.x + this.length + this.safeDistance) return true;
+            if(this.x <= carInfo.x && carInfo.x - carInfo.length < this.x + this.safeDistance) return true;
             return false;
         })) return false;
 
         return true;
     }
         
-    isSafe = () => {
-        let carInfos = this.laneInfo.carInfos;
-        carInfos = carInfos.concat(this.laneInfo.laneChangingCarInfos);
-        let controlInfos = this.laneInfo.controlInfos;
+    isSafe = (laneInfo, distance) => {
+        if(this.state == ONCONN) {
+            let carInfos = laneInfo.carInfos;
+            if(carInfos.some(carInfo => {
+                if(this.id == carInfo.id) return false;
+                if(carInfo.isQueued()) return false;
+                let x = carInfo.x;
+                if(this.x <= x && x - carInfo.length < this.x + distance) return true;
+                return false;
+            })) return false;
 
-        if(this.state == LANECHANGING) {
-            carInfos = carInfos.concat(this.nextLaneInfo.carInfos);
-            carInfos = carInfos.concat(this.nextLaneInfo.laneChangingCarInfos);
-            controlInfos = controlInfos.concat(this.nextLaneInfo.controlInfos);
+            let controlInfos = laneInfo.controlInfos;
+            if(controlInfos.some(controlInfo => {
+                if(controlInfo.isOpened()) return false;
+                let x = controlInfo.x;
+                if(this.x <= x && x < this.x + distance) return true;
+                return false;
+            })) return false;
+
+            if(laneInfo.length < this.x + distance) {
+                let carInfos = laneInfo.nextInfo.carInfos;
+                carInfos = carInfos.concat(laneInfo.nextInfo.laneChangingCarInfos);
+                if(carInfos.some(carInfo => {
+                    if(this.id == carInfo.id) return false;
+                    if(carInfo.isQueued()) return false;
+                    let x = laneInfo.length + carInfo.x;
+                    if(this.x <= x && x - carInfo.length < this.x + distance) return true;
+                    return false;
+                })) return false;
+
+                let controlInfos = laneInfo.nextInfo.controlInfos;
+                if(controlInfos.some(controlInfo => {
+                    if(controlInfo.isOpened()) return false;
+                    let x = laneInfo.length + controlInfo.x;
+                    if(this.x <= x && x < this.x + distance) return true;
+                    return false;
+                })) return false;
+            }
         }
+        else {
+            let carInfos = laneInfo.carInfos;
+            carInfos = carInfos.concat(laneInfo.laneChangingCarInfos);
+            if(carInfos.some(carInfo => {
+                if(this.id == carInfo.id) return false;
+                if(carInfo.isQueued()) return false;
+                let x = carInfo.x;
+                if(this.x <= x && x - carInfo.length < this.x + distance) return true;
+                return false;
+            })) return false;
+            
+            let controlInfos = laneInfo.controlInfos;
+            if(controlInfos.some(controlInfo => {
+                if(controlInfo.isOpened()) return false;
+                let x = controlInfo.x;
+                if(this.x <= x && x < this.x + distance) return true;
+                return false;
+            })) return false;
 
-        if(carInfos.some(carInfo => {
-            if(this.id == carInfo.id) return false;
-            if(carInfo.isQueued()) return false;
-            if(this.x <= carInfo.x && carInfo.x < this.x + this.length + this.safeDistance) return true;
-            return false;
-        })) return false;
+            if(!!this.destConnInfo && laneInfo.length < this.x + distance) {
+                let carInfos = this.destConnInfo.carInfos;
+                if(carInfos.some(carInfo => {
+                    if(this.id == carInfo.id) return false;
+                    if(carInfo.isQueued()) return false;
+                    let x = laneInfo.length + carInfo.x;
+                    if(this.x <= x && x - carInfo.length < this.x + distance) return true;
+                    return false;
+                })) return false;
 
-        if(controlInfos.some(controlInfo => {
-            if(controlInfo.isOpened()) return false;
-            if(this.x + this.length <= controlInfo.x && controlInfo.x < this.x + this.length + this.safeDistance) return true;
-            return false;
-        })) return false;
+                let controlInfos = this.destConnInfo.controlInfos;
+                if(controlInfos.some(controlInfo => {
+                    if(controlInfo.isOpened()) return false;
+                    let x = laneInfo.length + controlInfo.x;
+                    if(this.x <= x && x < this.x + distance) return true;
+                    return false;
+                })) return false;
+
+                if(laneInfo.length + this.destConnInfo.length < this.x + distance) {
+                    let carInfos = this.destConnInfo.nextInfo.carInfos;
+                    if(carInfos.some(carInfo => {
+                        if(this.id == carInfo.id) return false;
+                        if(carInfo.isQueued()) return false;
+                        let x = laneInfo.length + this.destConnInfo.length + carInfo.x;
+                        if(this.x <= x && x - carInfo.length < this.x + distance) return true;
+                        return false;
+                    })) return false;
+    
+                    let controlInfos = this.destConnInfo.nextInfo.controlInfos;
+                    if(controlInfos.some(controlInfo => {
+                        if(controlInfo.isOpened()) return false;
+                        let x = laneInfo.length + this.destConnInfo.length + controlInfo.x;
+                        if(this.x <= x && x < this.x + distance) return true;
+                        return false;
+                    })) return false;
+                }
+            }
+        }
         
         return true;
-    }
-
-    isDanger = () => {
-        let carInfos = this.laneInfo.carInfos;
-        carInfos = carInfos.concat(this.laneInfo.laneChangingCarInfos);
-        let controlInfos = this.laneInfo.controlInfos;
-
-        if(this.state == LANECHANGING) {
-            carInfos = carInfos.concat(this.nextLaneInfo.carInfos);
-            carInfos = carInfos.concat(this.nextLaneInfo.laneChangingCarInfos);
-            controlInfos = controlInfos.concat(this.nextLaneInfo.controlInfos);
-        }
-
-        if(carInfos.some(carInfo => {
-            if(this.id == carInfo.id) return false;
-            if(carInfo.isQueued()) return false;
-            if(this.x <= carInfo.x && carInfo.x < this.x + this.length + this.dangerDistance) return true;
-            return false;
-        })) return true;
-
-        if(controlInfos.some(controlInfo => {
-            if(controlInfo.isOpened()) return false;
-            if(this.x + this.length <= controlInfo.x && controlInfo.x < this.x + this.length + this.dangerDistance) return true;
-            return false;
-        })) return true;
-
-        return false;
     }
 
     isChangable = laneInfo => {
         if(!laneInfo) return false;
-        if(laneInfo.length < this.x + this.length + this.safeDistance) return false;
+        if(!laneInfo.nextInfos.includes(this.destConnInfo)) return false;
+        if(this.x - this.length < 0) return false;
+        if(this.roadInfo.length < this.x + this.safeDistance) return false;
 
         let carInfos = laneInfo.carInfos;
         carInfos = carInfos.concat(laneInfo.laneChangingCarInfos);
@@ -149,14 +236,14 @@ export class CarInfo {
         if(carInfos.some(carInfo => {
             if(this.id == carInfo.id) return false;
             if(carInfo.isQueued()) return false;
-            if(this.x <= carInfo.x && carInfo.x < this.x + this.length + this.safeDistance) return true;
-            if(carInfo.x <= this.x && this.x < carInfo.x + carInfo.length + this.dangerDistance) return true;
+            if(this.x <= carInfo.x && carInfo.x - carInfo.length < this.x + this.safeDistance) return true;
+            if(carInfo.x <= this.x && this.x - this.length < carInfo.x + this.dangerDistance) return true;
             return false;
         })) return false;
 
         if(controlInfos.some(controlInfo => {
             if(controlInfo.isOpened()) return false;
-            if(this.x + this.length <= controlInfo.x && controlInfo.x < this.x + this.length + this.safeDistance) return true;
+            if(this.x <= controlInfo.x && controlInfo.x < this.x + this.safeDistance) return true;
             return false;
         })) return false;
 
@@ -182,13 +269,7 @@ export class CarInfo {
         this.v = Math.max(this.v, 0);
     }
 
-    isOverflow = () => {
-        return this.x > this.roadInfo.length;
-    }
-
     tryLaneChange = () => {
-        if(this.state != NORMAL) return;
-
         if(this.isChangable(this.laneInfo.leftLaneInfo())) {
             this.state = LANECHANGING;
             this.nextLaneInfo = this.laneInfo.leftLaneInfo();
@@ -212,38 +293,60 @@ export class CarInfo {
     progress = (dt) => {
         if(this.state == QUEUED) {
             if(this.isReady()) {
-                this.state = NORMAL;
+                this.state = ONLANE;
             }
             else {
                 return;
             }
         }
-
-        if(this.isSpeeding()) {
-            this.brake(dt);
+        else if(this.state == ONLANE) {
+            if(this.isSpeeding()) {
+                this.brake(dt);
+            }
+            else if(!this.isSafe(this.laneInfo, this.dangerDistance)) {
+                this.tryLaneChange();
+                this.brake(dt);
+            }
+            else if(!this.isSafe(this.laneInfo, this.safeDistance)) {
+                this.tryLaneChange();
+                this.deccelerate(dt);
+            }
+            else {
+                this.accelerate(dt);
+            }
         }
-        else if(this.isDanger()) {
-            this.tryLaneChange();
-            this.brake(dt);
-        }
-        else if(this.isSafe()) {
-            this.accelerate(dt);
-        }
-        else {
-            this.tryLaneChange();
-            this.deccelerate(dt);
-        }
-        
-        this.move(dt);
-        if(this.state == LANECHANGING) {
+        else if(this.state == LANECHANGING) {
+            if(this.isSpeeding()) {
+                this.brake(dt);
+            }
+            else if(!(this.isSafe(this.laneInfo, this.dangerDistance) && this.isSafe(this.nextLaneInfo, this.dangerDistance))) {
+                this.brake(dt);
+            }
+            else if(!(this.isSafe(this.laneInfo, this.safeDistance) && this.isSafe(this.nextLaneInfo, this.safeDistance))) {
+                this.deccelerate(dt);
+            }
+            else {
+                this.accelerate(dt);
+            }
             this.laneChange(dt);
         }
-
-        if(this.isOverflow()) {
-            this.state = REMOVED;
-            return;
+        else if(this.state == ONCONN) {
+            if(this.isSpeeding()) {
+                this.brake(dt);
+            }
+            else if(!this.isSafe(this.connInfo, this.dangerDistance)) {
+                this.brake(dt);
+            }
+            else if(!this.isSafe(this.connInfo, this.safeDistance)) {
+                this.deccelerate(dt);
+            }
+            else {
+                this.accelerate(dt);
+            }
         }
 
+        this.move(dt);
+        this.updateLane();
         this.updatePosition();
     }
 };
@@ -254,26 +357,42 @@ export class ControlInfo {
 
     constructor(laneInfo, x, period, delay, duration) {
         this.id = ControlInfo.count++;
-        this.laneInfo = laneInfo;
-        this.roadInfo = laneInfo.roadInfo;
+
+        if(!!laneInfo.roadInfo) {
+            this.laneInfo = laneInfo;
+            this.roadInfo = laneInfo.roadInfo;
+            laneInfo.controlInfos.push(this);
+        }
+        else {
+            this.connInfo = laneInfo;
+            laneInfo.controlInfos.push(this);
+        }
+
         this.x = x;
         this.period = period;
         this.delay = delay;
         this.duration = duration;
 
         this.t = period - delay;
+    }
 
-        let l = laneInfo.line;
-        let c = l.p1.add(l.dir().mul(this.x));
-        this.left = c.x;
-        this.top = c.y - this.roadInfo.laneWidth / 2;
-        this.angle = this.laneInfo.angle;
-
-        laneInfo.controlInfos.push(this);
+    updatePosition = () => {
+        let p;
+        if(!!this.laneInfo) {
+            p = this.laneInfo.getPosition(this.x, 0, this.width(), this.width());
+        }
+        else {
+            p = this.connInfo.getPosition(this.x, this.width(), this.width());
+        }
+        this.left = p.left;
+        this.top = p.top;
+        this.angle = p.angle; 
+        this.zIndex = p.zIndex + 2;
     }
 
     progress = () => {
         this.t = (this.t + 1) % this.period;
+        this.updatePosition();
     }
     
     isOpened = () => {
@@ -281,7 +400,11 @@ export class ControlInfo {
     }
 
     remainTime = () => {
-        return this.duration - this.t;
+        return this.isOpened() ? (this.period - this.t) : (this.duration - this.t);
+    }
+
+    width = () => {
+        return this.remainTime() * 0.05;
     }
 }
 
@@ -290,23 +413,22 @@ export class ControlInfo {
 export class ConnInfo {
     static count = 0;
 
-    constructor(prevLaneInfo, nextLaneInfo) {
+    constructor(prevInfo, nextInfo) {
         this.id = ConnInfo.count++;
-        this.prevLaneInfo = prevLaneInfo;
-        this.nextLaneInfo = nextLaneInfo;
-        prevLaneInfo.nextConnInfo = this;
-        nextLaneInfo.prevConnInfo = this;
-        this.zIndex = (prevLaneInfo.roadInfo.zIndex + prevLaneInfo.roadInfo.zIndex) / 2;
+        this.prevInfo = prevInfo;
+        this.nextInfo = nextInfo;
+        prevInfo.nextInfos.push(this);
+        this.zIndex = (prevInfo.zIndex + nextInfo.zIndex) / 2;
 
-        this.breadth = prevLaneInfo.breadth;
+        this.breadth = prevInfo.breadth;
 
-        let l1 = this.prevLaneInfo.line;
-        let l2 = this.nextLaneInfo.line;
+        let l1 = this.prevInfo.line;
+        let l2 = this.nextInfo.line;
 
         let p = Line.intersection(l1, l2);
-        console.log(l2.a, l2.b, p.x, p.y);
-        let isOnL1 = (l1.p1.x < p.x && p.x < l1.p2.x) || (l1.p2.x < p.x && p.x < l1.p1.x);
-        let isOnL2 = (l2.p1.x < p.x && p.x < l2.p2.x) || (l2.p2.x < p.x && p.x < l2.p1.x);
+        let a = Vector.outerProd(l1.d, l2.d) > 0;
+        let isOnL1 = (l1.p1.x < l1.p2.x && p.x < l1.p2.x) || (l1.p2.x < l1.p1.x && l1.p2.x < p.x) || (l1.p1.y < l1.p2.y && p.y < l1.p2.y) || (l1.p2.y < l1.p1.y && l1.p2.y < p.y);
+        let isOnL2 = (l2.p1.x < l2.p2.x && l2.p1.x < p.x) || (l2.p2.x < l2.p1.x && p.x < l2.p1.x) || (l2.p1.y < l2.p2.y && l2.p1.y < p.y) || (l2.p2.y < l2.p1.y && p.y < l2.p1.y);
         let d1 = Vector.dist(l1.p2, p);
         let d2 = Vector.dist(l2.p1, p);
 
@@ -319,14 +441,17 @@ export class ConnInfo {
                 this.length1 = d2 - d1;
                 this.length3 = 0;
             }
+            this.isClockwise = !a;
         }
         else if(isOnL1) {
             this.length1 = 0;
             this.length3 = d1 + d2;
+            this.isClockwise = !a;
         }
         else if(isOnL2) {
             this.length1 = d1 + d2;
             this.length3 = 0;
+            this.isClockwise = !a;
         }
         else {
             if(d1 > d2) {
@@ -337,6 +462,7 @@ export class ConnInfo {
                 this.length1 = 0;
                 this.length3 = d2 - d1;
             }
+            this.isClockwise = a;
         }
         let q1 = l1.p2.add(l1.dir().mul(this.length1));
         let r1 = q1.add(l1.dir().rot(Math.PI / 2));
@@ -350,24 +476,71 @@ export class ConnInfo {
         this.left2 = this.center.x - this.radius - this.breadth / 2;
         this.top2 = this.center.y - this.radius - this.breadth / 2;
 
-        this.angle = m2.angle() - m1.angle();
-        this.length2 = this.radius * this.angle;
+        let b = this.isClockwise ? (m2.angle() - m1.angle()) : (m1.angle() - m2.angle());
+        if(b < 0) b += Math.PI * 2;
+        this.length2 = this.radius * b;
         this.length = this.length1 + this.length2 + this.length3;
 
         this.line1 = new Line(l1.p2.x, l1.p2.y, q1.x, q1.y);
         let c1 = this.line1.center();
         this.left1 = c1.x - this.length1 / 2;
         this.top1 = c1.y - this.breadth / 2;
-        this.angle1 = this.line1.angle();
+        this.angle1 = l1.angle();
 
-        this.line3 = new Line(q2.x, q2.y, l2.p1.x, l2.p1.y);
+        this.line21 = new Line(this.center.x, this.center.y, q1.x, q1.y);
+        this.line22 = new Line(this.center.x, this.center.y, q2.x, q2.y);
+
+        this.line3 = new Line(q2.x, q2.y, l2.p1.x, l2.p1.y); 
         let c3 = this.line3.center();
         this.left3 = c3.x - this.length3 / 2;
         this.top3 = c3.y - this.breadth / 2;
-        this.angle3 = this.line3.angle();
+        this.angle3 = l2.angle();
 
         this.carInfos = [];
         this.controlInfos = [];
+    }
+
+    reset = () => {
+        this.carInfos = [];
+    }
+
+    getPosition = (x, width, height) => {
+        let left, top, angle;
+        if(x < this.length1) {
+            let l = this.line1;
+            let d = l.dir();
+            let c = l.p1.add(d.mul(x - width / 2));
+            left = c.x - width / 2;
+            top = c.y - height / 2;
+            angle = this.angle1;
+        }
+        else if(x < this.length1 + this.length2) {
+            x -= this.length1;
+            let a = x / this.radius;
+            let r = this.line21.d.rot(this.isClockwise ? a : -a);
+            let d = r.dir().rot(this.isClockwise ? Math.PI/2 : -Math.PI/2).mul(-width / 2);
+            let c = this.center.add(r).add(d);
+            left = c.x - width / 2;
+            top = c.y - height / 2;
+            angle = d.rot(Math.PI).angle();
+        }
+        else {
+            x -= this.length1 + this.length2;
+            let l = this.line3;
+            let d = l.dir();
+            let c = l.p1.add(d.mul(x - width / 2));
+            left = c.x - width / 2;
+            top = c.y - height / 2;
+            angle = this.angle3;
+        }
+        let zIndex = this.zIndex;
+
+        return {
+            left: left,
+            top: top,
+            angle: angle,
+            zIndex: zIndex,
+        };
     }
 }
 
@@ -388,15 +561,16 @@ export class LaneInfo {
         this.left = 0;
         this.top = laneIdx * roadInfo.laneWidth;
         this.angle = roadInfo.angle;
+        this.zIndex = roadInfo.zIndex;
 
-        let vec = roadInfo.line.dir().rot(Math.PI / 2).mul(laneIdx * roadInfo.laneWidth + this.breadth / 2 - roadInfo.breadth / 2);
+        let y = laneIdx * roadInfo.laneWidth + this.breadth / 2 - roadInfo.breadth / 2;
+        let vec = roadInfo.line.dir().rot(Math.PI / 2).mul(y);
         this.line = roadInfo.line.parallelTranslation(vec);
 
         this.carInfos = [];
         this.laneChangingCarInfos = [];
         this.controlInfos = [];
-        this.prevConnInfo = null;
-        this.nextConnInfo = null;
+        this.nextInfos = [];
     }
 
     leftLaneInfo = () => {
@@ -410,6 +584,26 @@ export class LaneInfo {
     reset = () => {
         this.carInfos = [];
         this.laneChangingCarInfos = [];
+    }
+
+    getPosition = (x, y, width, height) => {
+        let l = this.line;
+        let d = l.dir();
+        let c = l.p1.add(d.mul(x - width / 2));
+        if(y != 0) {
+            c = c.add(d.rot(Math.PI / 2).mul(y));
+        }
+        let left = c.x - width / 2;
+        let top = c.y - height / 2;
+        let angle = this.angle;
+        let zIndex = this.zIndex;
+
+        return {
+            left: left,
+            top: top,
+            angle: angle,
+            zIndex: zIndex,
+        };
     }
 }
 
@@ -463,53 +657,53 @@ export class CarGenInfo {
     static carProps = [
         {
             name: "whiteCar",
-            length: 70,
-            breadth: 28,
+            length: 45,
+            breadth: 22,
             colors: {body: "#eee"},
             a: 25,
-            d: 1,
+            d: 3,
             b: 40,
             maxV: 70,
             laneChangeV: 0.3,
-            safeDistance: 120,
+            safeDistance: 140,
             dangerDistance: 90,
             initV: 30,
         }, 
         {
             name: "yellowCar",
-            length: 70,
-            breadth: 28,
+            length: 45,
+            breadth: 22,
             colors: {body: "#ff8"},
             a: 25,
-            d: 1,
+            d: 3,
             b: 40,
             maxV: 70,
             laneChangeV: 0.3,
-            safeDistance: 120,
+            safeDistance: 140,
             dangerDistance: 90,
             initV: 30,
         }, 
         {
             name: "greenCar",
-            length: 70,
-            breadth: 28,
+            length: 45,
+            breadth: 22,
             colors: {body: "#8f8"},
             a: 25,
-            d: 1,
+            d: 3,
             b: 40,
             maxV: 70,
             laneChangeV: 0.3,
-            safeDistance: 120,
+            safeDistance: 140,
             dangerDistance: 90,
             initV: 30,
         }, 
         {
             name: "grayTruck",
-            length: 90,
-            breadth: 29,
+            length: 60,
+            breadth: 22,
             colors: {body: "#bbb"},
             a: 20,
-            d: 1,
+            d: 3,
             b: 40,
             maxV: 60,
             laneChangeV: 0.2,
@@ -519,11 +713,11 @@ export class CarGenInfo {
         }, 
         {
             name: "redBus",
-            length: 150,
-            breadth: 30,
+            length: 80,
+            breadth: 22,
             colors: {body: "#f88"},
             a: 15,
-            d: 1,
+            d: 3,
             b: 40,
             maxV: 55,
             laneChangeV: 0.15,
@@ -541,7 +735,6 @@ export class CarGenInfo {
     }
 
     generateCar = carInfos => {
-        if(!this.isValid()) return;
         if(!randomBool(this.prob)) return;
 
         let carProp = randomSelect(CarGenInfo.carProps);
@@ -559,9 +752,5 @@ export class CarGenInfo {
             carProp.dangerDistance,
             carProp.initV,
         ));
-    }
-
-    isValid = () => {
-        return !this.laneInfo.prevConnInfo;
     }
 }

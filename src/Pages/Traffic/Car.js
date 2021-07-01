@@ -11,7 +11,7 @@ class Car extends React.Component {
             left: carInfo.left,
             top: carInfo.top,
             transform: `rotate(${carInfo.angle}rad)`,
-            zIndex: carInfo.roadInfo.zIndex + 3,
+            zIndex: carInfo.zIndex,
             width: carInfo.length,
             height: carInfo.breadth,
         }
@@ -21,6 +21,7 @@ class Car extends React.Component {
             height: carInfo.breadth,
             background: carInfo.colors.body,
             borderRadius: 7,
+            border: "solid 2px #000",
         }
 
         return (
