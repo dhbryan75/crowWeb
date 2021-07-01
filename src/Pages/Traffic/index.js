@@ -18,63 +18,84 @@ var screenCenter = new Vector(0, 0);
 var screenV = new Vector(0, 0);
 const screenMoveSpeed = 10;
 
+
 var roadInfos = [
     new RoadInfo(
-        -400, -100, 
-        -900, -100, 
+        300, 100, 
+        1200, 100, 
         0, 
-        2,
+        4,
         90, 
         8,
         40,
         2,
     ),
     new RoadInfo(
-        -900, 0, 
-        -400, 0,
+        1200, -100, 
+        300, -100,
         0, 
-        2,
+        4,
         90,
         8,
         40,
         2,
     ),
     new RoadInfo(
-        400, -700, 
-        0, -300, 
+        100, -300, 
+        100, -800, 
         0, 
-        2, 
+        4,
         90, 
         8,
         40,
         2,
     ),
     new RoadInfo(
-        100, -200, 
-        500, -600, 
+        -100, -800, 
+        -100, -300,
         0, 
-        2, 
+        4,
+        90,
+        8,
+        40,
+        2,
+    ),
+    new RoadInfo(
+        -300, -100, 
+        -1200, -100, 
+        0, 
+        4,
         90, 
         8,
         40,
         2,
     ),
     new RoadInfo(
-        -100, 200, 
+        -1200, 100, 
+        -300, 100,
+        0, 
+        4,
+        90,
+        8,
+        40,
+        2,
+    ),
+    new RoadInfo(
+        -100, 300, 
         -100, 800, 
         0, 
-        2, 
+        4,
         90, 
         8,
         40,
         2,
     ),
     new RoadInfo(
-        0, 800, 
-        0, 200, 
+        100, 800, 
+        100, 300,
         0, 
-        2, 
-        90, 
+        4,
+        90,
         8,
         40,
         2,
@@ -82,29 +103,88 @@ var roadInfos = [
 ];
 
 var connInfos = [
-    new ConnInfo(
+    new ConnInfo(//0
         roadInfos[1].laneInfos[0], 
-        roadInfos[3].laneInfos[0],
+        roadInfos[6].laneInfos[0],
     ),
-    new ConnInfo(
+    new ConnInfo(//1
         roadInfos[1].laneInfos[1], 
         roadInfos[4].laneInfos[1],
     ),
-    new ConnInfo(
-        roadInfos[2].laneInfos[0], 
-        roadInfos[4].laneInfos[0],
+    new ConnInfo(//2
+        roadInfos[1].laneInfos[2], 
+        roadInfos[4].laneInfos[2],
     ),
-    new ConnInfo(
-        roadInfos[2].laneInfos[1], 
-        roadInfos[0].laneInfos[1],
+    new ConnInfo(//3
+        roadInfos[1].laneInfos[3], 
+        roadInfos[4].laneInfos[3],
     ),
-    new ConnInfo(
-        roadInfos[5].laneInfos[0], 
+    new ConnInfo(//4
+        roadInfos[1].laneInfos[3], 
+        roadInfos[2].laneInfos[3],
+    ),
+
+    new ConnInfo(//5
+        roadInfos[3].laneInfos[0], 
         roadInfos[0].laneInfos[0],
     ),
-    new ConnInfo(
+    new ConnInfo(//6
+        roadInfos[3].laneInfos[1], 
+        roadInfos[6].laneInfos[1],
+    ),
+    new ConnInfo(//7
+        roadInfos[3].laneInfos[2], 
+        roadInfos[6].laneInfos[2],
+    ),
+    new ConnInfo(//8
+        roadInfos[3].laneInfos[3], 
+        roadInfos[6].laneInfos[3],
+    ),
+    new ConnInfo(//9
+        roadInfos[3].laneInfos[3], 
+        roadInfos[4].laneInfos[3],
+    ),
+
+    new ConnInfo(//10
+        roadInfos[5].laneInfos[0], 
+        roadInfos[2].laneInfos[0],
+    ),
+    new ConnInfo(//11
         roadInfos[5].laneInfos[1], 
-        roadInfos[3].laneInfos[1],
+        roadInfos[0].laneInfos[1],
+    ),
+    new ConnInfo(//12
+        roadInfos[5].laneInfos[2], 
+        roadInfos[0].laneInfos[2],
+    ),
+    new ConnInfo(//13
+        roadInfos[5].laneInfos[3], 
+        roadInfos[0].laneInfos[3],
+    ),
+    new ConnInfo(//14
+        roadInfos[5].laneInfos[3], 
+        roadInfos[6].laneInfos[3],
+    ),
+
+    new ConnInfo(//15
+        roadInfos[7].laneInfos[0], 
+        roadInfos[4].laneInfos[0],
+    ),
+    new ConnInfo(//16
+        roadInfos[7].laneInfos[1], 
+        roadInfos[2].laneInfos[1],
+    ),
+    new ConnInfo(//17
+        roadInfos[7].laneInfos[2], 
+        roadInfos[2].laneInfos[2],
+    ),
+    new ConnInfo(//18
+        roadInfos[7].laneInfos[3], 
+        roadInfos[2].laneInfos[3],
+    ),
+    new ConnInfo(//19
+        roadInfos[7].laneInfos[3], 
+        roadInfos[0].laneInfos[3],
     ),
 ];
 
@@ -112,53 +192,173 @@ var carInfos = [];
 
 var controlInfos = [
     new ControlInfo(
-        connInfos[0],
+        connInfos[1],
         0,
-        900,
+        1200,
         0,
-        640,
+        960,
     ),
     new ControlInfo(
         connInfos[2],
         0,
-        900,
-        300,
-        640,
+        1200,
+        0,
+        960,
     ),
     new ControlInfo(
-        connInfos[4],
+        connInfos[3],
         0,
-        900,
+        1200,
+        0,
+        960,
+    ),
+    new ControlInfo(
+        connInfos[11],
+        0,
+        1200,
+        0,
+        960,
+    ),
+    new ControlInfo(
+        connInfos[12],
+        0,
+        1200,
+        0,
+        960,
+    ),
+    new ControlInfo(
+        connInfos[13],
+        0,
+        1200,
+        0,
+        960,
+    ),
+
+    new ControlInfo(
+        connInfos[5],
+        0,
+        1200,
+        300,
+        960,
+    ),
+    new ControlInfo(
+        connInfos[6],
+        0,
+        1200,
+        300,
+        960,
+    ),
+    new ControlInfo(
+        connInfos[7],
+        0,
+        1200,
+        300,
+        960,
+    ),
+    new ControlInfo(
+        connInfos[8],
+        0,
+        1200,
+        300,
+        960,
+    ),
+
+    new ControlInfo(
+        connInfos[15],
+        0,
+        1200,
         600,
-        640,
+        960,
+    ),
+    new ControlInfo(
+        connInfos[16],
+        0,
+        1200,
+        600,
+        960,
+    ),
+    new ControlInfo(
+        connInfos[17],
+        0,
+        1200,
+        600,
+        960,
+    ),
+    new ControlInfo(
+        connInfos[18],
+        0,
+        1200,
+        600,
+        960,
+    ),
+
+    new ControlInfo(
+        connInfos[0],
+        0,
+        1200,
+        900,
+        960,
+    ),
+    new ControlInfo(
+        connInfos[10],
+        0,
+        1200,
+        900,
+        960,
     ),
 ];
-
 
 var carGenInfos = [
     new CarGenInfo(
         roadInfos[1].laneInfos[0],
-        0.01,
+        0.005,
     ),
     new CarGenInfo(
         roadInfos[1].laneInfos[1],
-        0.01,
+        0.007,
     ),
     new CarGenInfo(
-        roadInfos[2].laneInfos[0],
-        0.01,
+        roadInfos[1].laneInfos[3],
+        0.007,
+    ),
+
+    new CarGenInfo(
+        roadInfos[3].laneInfos[0],
+        0.005,
     ),
     new CarGenInfo(
-        roadInfos[2].laneInfos[1],
-        0.01,
+        roadInfos[3].laneInfos[1],
+        0.007,
     ),
+    new CarGenInfo(
+        roadInfos[3].laneInfos[3],
+        0.007,
+    ),
+
     new CarGenInfo(
         roadInfos[5].laneInfos[0],
-        0.01,
+        0.005,
     ),
     new CarGenInfo(
         roadInfos[5].laneInfos[1],
-        0.01,
+        0.007,
+    ),
+    new CarGenInfo(
+        roadInfos[5].laneInfos[3],
+        0.007,
+    ),
+
+    new CarGenInfo(
+        roadInfos[7].laneInfos[0],
+        0.005,
+    ),
+    new CarGenInfo(
+        roadInfos[7].laneInfos[1],
+        0.007,
+    ),
+    new CarGenInfo(
+        roadInfos[7].laneInfos[3],
+        0.007,
     ),
 ];
 
@@ -194,17 +394,46 @@ const progress = () => {
     screenCenter = screenCenter.add(screenV);
 };
 
+
+
+var isMouseDown = false;
+const onMouseDown = e => {
+    if(e.button === 0) {
+        isMouseDown = true;
+    }
+}
+
+const onMouseUp = e => {
+    if(e.button === 0) {
+        isMouseDown = false;
+    }
+}
+
+const onMouseMove = e => {
+    if(!isMouseDown) return;
+    let d = new Vector(e.movementX, e.movementY);
+    screenCenter = screenCenter.add(d);
+}
+
+
+
+let downKeys = [];
 const onKeyDown = e => {
-    if(e.code === "KeyW") {
+    if(downKeys.includes(e.code)) {
+        return;
+    }
+    downKeys.push(e.code);
+
+    if(e.code === "KeyW" || e.code === "ArrowUp") {
         screenV = screenV.add(new Vector(0, screenMoveSpeed));
     } 
-    else if(e.code === "KeyA") {
+    else if(e.code === "KeyA" || e.code === "ArrowLeft") {
         screenV = screenV.add(new Vector(screenMoveSpeed, 0));
     } 
-    else if(e.code === "KeyS") {
+    else if(e.code === "KeyS" || e.code === "ArrowDown") {
         screenV = screenV.add(new Vector(0, -screenMoveSpeed));
     }
-    else if(e.code === "KeyD") {
+    else if(e.code === "KeyD" || e.code === "ArrowRight") {
         screenV = screenV.add(new Vector(-screenMoveSpeed, 0));
     }
     else {
@@ -213,16 +442,22 @@ const onKeyDown = e => {
 }
 
 const onKeyUp = e => {
-    if(e.code === "KeyW") {
+    let idx = downKeys.findIndex(key => (key === e.code));
+    if(idx === undefined) {
+        return;
+    }
+    downKeys.splice(idx, 1);
+
+    if(e.code === "KeyW" || e.code === "ArrowUp") {
         screenV = screenV.add(new Vector(0, -screenMoveSpeed));
     } 
-    else if(e.code === "KeyA") {
+    else if(e.code === "KeyA" || e.code === "ArrowLeft") {
         screenV = screenV.add(new Vector(-screenMoveSpeed, 0));
     } 
-    else if(e.code === "KeyS") {
+    else if(e.code === "KeyS" || e.code === "ArrowDown") {
         screenV = screenV.add(new Vector(0, screenMoveSpeed));
     }
-    else if(e.code === "KeyD") {
+    else if(e.code === "KeyD" || e.code === "ArrowRight") {
         screenV = screenV.add(new Vector(screenMoveSpeed, 0));
     }
     else {
@@ -242,7 +477,10 @@ class TrafficPage extends React.Component {
 
     init = () => {
         document.addEventListener('keydown', onKeyDown);
-        document.addEventListener('keyup', onKeyUp); 
+        document.addEventListener('keyup', onKeyUp);
+        document.addEventListener('mousedown', onMouseDown);
+        document.addEventListener('mouseup', onMouseUp);
+        document.addEventListener('mousemove', onMouseMove);
     }
 
     animate = async() => {
@@ -269,41 +507,62 @@ class TrafficPage extends React.Component {
     render() {
         const { width, height } = this.props;
         const { roadInfos, connInfos, carInfos, controlInfos, screenCenter } = this.state;
-        if(!screenCenter) return null;
 
-        const trafficStyle = {
+        const backgroundStyle = {
+            position: "fixed",
+            left: 0,
+            top: 0,
+            width: width,
+            height: height,
+            background: "#bbb",
+            zIndex: -999,
+        }
+
+        const screenStyle = {
             position: "absolute",
             left: screenCenter.x + width / 2,
             top: screenCenter.y + height / 2,
+            zIndex: 0,
+        }
+
+        const interfaceStyle = {
+            position: "fixed",
+            left: 0,
+            top: 0,
+            width: width,
+            height: height,
+            zIndex: 999,
         }
 
         const roads = roadInfos.map(roadInfo => {
-            return <Road roadInfo={roadInfo}/>
+            return <Road key={roadInfo.id} roadInfo={roadInfo}/>
         });
 
         const conns = connInfos.map(connInfo => {
-            return <Conn connInfo={connInfo}/>
+            return <Conn key={connInfo.id} connInfo={connInfo}/>
         });
 
         const cars = carInfos.filter(carInfo => {
             return !carInfo.isQueued();
         }).map(carInfo => {
-            return <Car carInfo={carInfo}/>
+            return <Car key={carInfo.id} carInfo={carInfo}/>
         });
 
         const controls = controlInfos.map(controlInfo => {
-            return <Control controlInfo={controlInfo}/>
+            return <Control key={controlInfo.id} controlInfo={controlInfo}/>
         });
 
         return (
-            <div 
-                className="traffic" 
-                style={trafficStyle}
-            >
-                {roads}
-                {/*conns*/}
-                {cars}
-                {controls}
+            <div className="traffic">
+                <div className="background" style={backgroundStyle}/>
+                <div className="screen" style={screenStyle}>
+                    {roads}
+                    {/*conns*/}
+                    {cars}
+                    {/*controls*/}
+                </div>
+                <div className="interface" style={interfaceStyle}>
+                </div>
             </div>
         );
     }

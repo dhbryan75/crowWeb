@@ -24,7 +24,7 @@ class Road extends React.Component {
         };
         
         let lanes = roadInfo.laneInfos.map(laneInfo => {
-            return <Lane laneInfo={laneInfo}/>
+            return <Lane key={laneInfo.id} laneInfo={laneInfo}/>
         });
 
         return (

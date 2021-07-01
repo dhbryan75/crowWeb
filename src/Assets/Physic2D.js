@@ -70,20 +70,20 @@ export class Line {
         this.p1 = new Vector(x1, y1);
         this.p2 = new Vector(x2, y2);
         this.d = Vector.dif(this.p2, this.p1);
-        this.a = this.d.x == 0 ? null : (this.d.y / this.d.x);
-        this.b = this.d.x == 0 ? null : (y1 - this.a * x1);
+        this.a = this.d.x === 0 ? null : (this.d.y / this.d.x);
+        this.b = this.d.x === 0 ? null : (y1 - this.a * x1);
     }
 
     static intersection = (l1, l2) => {
-        if(l1.a == l2.a) {
+        if(l1.a === l2.a) {
             return null;
         }
-        else if(l1.a == null) {
+        else if(l1.a === null) {
             let x = l1.p1.x;
             let y = l2.a * x + l2.b;
             return new Vector(x, y);
         }
-        else if(l2.a == null) {
+        else if(l2.a === null) {
             let x = l2.p1.x;
             let y = l1.a * x + l1.b;
             return new Vector(x, y);
