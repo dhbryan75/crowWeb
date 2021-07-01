@@ -99,7 +99,7 @@ export class CarInfo {
         else {
             this.laneInfo.carInfos.push(this);
             if(this.state === LANECHANGING) {
-                this.nextLaneInfo.laneChangingCarInfos.push(this);
+                this.nextLaneInfo.carInfos.push(this);
             }
         }
     }
@@ -120,7 +120,6 @@ export class CarInfo {
 
     isReady = () => {
         let carInfos = this.laneInfo.carInfos;
-        carInfos = carInfos.concat(this.laneInfo.laneChangingCarInfos);
 
         if(carInfos.some(carInfo => {
             if(this.id === carInfo.id) return false;
@@ -153,7 +152,6 @@ export class CarInfo {
 
             if(laneInfo.length < this.x + distance) {
                 let carInfos = laneInfo.nextInfo.carInfos;
-                carInfos = carInfos.concat(laneInfo.nextInfo.laneChangingCarInfos);
                 if(carInfos.some(carInfo => {
                     if(this.id === carInfo.id) return false;
                     if(carInfo.isQueued()) return false;
@@ -173,7 +171,6 @@ export class CarInfo {
         }
         else {
             let carInfos = laneInfo.carInfos;
-            carInfos = carInfos.concat(laneInfo.laneChangingCarInfos);
             if(carInfos.some(carInfo => {
                 if(this.id === carInfo.id) return false;
                 if(carInfo.isQueued()) return false;
@@ -241,7 +238,6 @@ export class CarInfo {
         if(this.roadInfo.length < this.x + this.safeDistance) return false;
 
         let carInfos = laneInfo.carInfos;
-        carInfos = carInfos.concat(laneInfo.laneChangingCarInfos);
         let controlInfos = laneInfo.controlInfos;
 
         if(carInfos.some(carInfo => {
@@ -284,12 +280,12 @@ export class CarInfo {
         if(this.isChangable(this.laneInfo.leftLaneInfo())) {
             this.state = LANECHANGING;
             this.nextLaneInfo = this.laneInfo.leftLaneInfo();
-            this.nextLaneInfo.laneChangingCarInfos.push(this);
+            this.nextLaneInfo.carInfos.push(this);
         }
         else if(this.isChangable(this.laneInfo.rightLaneInfo())) {
             this.state = LANECHANGING;
             this.nextLaneInfo = this.laneInfo.rightLaneInfo();
-            this.nextLaneInfo.laneChangingCarInfos.push(this);
+            this.nextLaneInfo.carInfos.push(this);
         }
     }
 
@@ -597,7 +593,6 @@ export class LaneInfo {
         this.zIndex = roadInfo.zIndex;
 
         this.carInfos = [];
-        this.laneChangingCarInfos = [];
         this.controlInfos = [];
         this.nextInfos = [];
 
@@ -616,7 +611,6 @@ export class LaneInfo {
     
     reset = () => {
         this.carInfos = [];
-        this.laneChangingCarInfos = [];
     }
 
     getPosition = (x, y, width, height) => {
