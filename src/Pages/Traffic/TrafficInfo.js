@@ -20,6 +20,8 @@ export class CarInfo {
         
         this.laneInfo = laneInfo;
         this.roadInfo = laneInfo.roadInfo;
+        this.connInfo = null;
+        this.destConnInfo = randomSelect(laneInfo.nextInfos);
 
         this.length = length;
         this.breadth = breadth;
@@ -32,7 +34,7 @@ export class CarInfo {
         this.laneChangeV = laneChangeV;
         this.safeDistance = safeDistance;
         this.dangerDistance = dangerDistance;
-
+        
         this.v = 0;
         this.x = 0;
 
@@ -40,74 +42,40 @@ export class CarInfo {
         this.laneChangeRate = 0;
         this.y = 0;
 
-        this.connInfo = null;
-        this.destConnInfo = randomSelect(laneInfo.nextInfos);
-    }
+        /*
+        state: 차량 현재 상태 (int)
 
-    updatePosition = () => {
-        let p;
-        if(this.state === ONCONN) {
-            p = this.connInfo.getPosition(this.x, this.length, this.breadth);
-        }
-        else {
-            p = this.laneInfo.getPosition(this.x, this.y, this.length, this.breadth);
-        }
-        this.left = p.left;
-        this.top = p.top;
-        this.angle = p.angle;
-        this.zIndex = p.zIndex + 3;
-    }
+        laneInfo: 현재 속한 레인
+        roadInfo: 현재 속한 로드
+        connInfo: 현재 속한 커넥션
+        destConnInfo: 목적지 커넥션, 레인에 연결된 커넥션 중 랜덤 배정
 
-    updateLane = () => {
-        if(this.state === ONCONN) {
-            if(this.x > this.connInfo.length) {
-                let idx = this.connInfo.carInfos.findIndex(carInfo => carInfo.id === this.id);
-                if(idx !== undefined) this.connInfo.carInfos.splice(idx, 1);
-                this.state = ONLANE;
-                this.laneInfo = this.connInfo.nextInfo;
-                this.roadInfo = this.laneInfo.roadInfo;
-                this.laneInfo.carInfos.push(this);
-                this.destConnInfo = randomSelect(this.laneInfo.nextInfos);
-                this.x = 0;
-                this.laneChangeRate = 0;
-                this.y = 0;
-            }
-        }
-        else {
-            if(this.x > this.laneInfo.length) {
-                if(!!this.destConnInfo) {
-                    let idx = this.laneInfo.carInfos.findIndex(carInfo => carInfo.id === this.id);
-                    if(idx !== undefined) this.laneInfo.carInfos.splice(idx, 1);
-                    this.state = ONCONN;
-                    this.connInfo = this.destConnInfo;
-                    this.connInfo.carInfos.push(this);
-                    this.x = 0;
-                    this.laneChangeRate = 0;
-                    this.y = 0;
-                }
-                else {
-                    this.state = REMOVED;
-                }
-            }
-        }
-    }
+        maxV: 최고 속력
+        laneChangeV: 차선 변경 속력
+        safeDistance: 안전 거리
+        dangerDistance: 위험 거리
+        v: 현재 속력
+        x: 현재 레인/커넥션에서의 가로 위치
 
-    move = dt => {
-        this.x += this.v * dt;
+        nextLaneInfo: 차선 변경시, 레인
+        laneChangeRate: 차선 변경시, 진행도 (0~1)
+        y: 차선 변경시, 세로 위치
+        */
     }
 
     registerCar = () => {
-        if(this.state === ONCONN) {
+        if(this.state === ONLANE) {
+            this.laneInfo.carInfos.push(this);
+        }
+        else if(this.state === ONCONN) {
             this.connInfo.carInfos.push(this);
         }
-        else {
+        else if(this.state === LANECHANGING) {
             this.laneInfo.carInfos.push(this);
-            if(this.state === LANECHANGING) {
-                this.nextLaneInfo.carInfos.push(this);
-            }
+            this.nextLaneInfo.carInfos.push(this);
         }
     }
-
+    
     laneChange = dt => {
         this.laneChangeRate += this.laneChangeV * dt;
         this.y = this.roadInfo.laneWidth * this.laneChangeRate * (this.nextLaneInfo.laneIdx - this.laneInfo.laneIdx);
@@ -127,56 +95,19 @@ export class CarInfo {
 
     isReady = () => {
         let carInfos = this.laneInfo.carInfos;
-
+        
         if(carInfos.some(carInfo => {
             if(this.id === carInfo.id) return false;
             if(carInfo.isQueued()) return false;
             if(this.x <= carInfo.x && carInfo.x - carInfo.length < this.x + this.safeDistance) return true;
             return false;
         })) return false;
-
+        
         return true;
     }
-        
+    
     isSafe = (laneInfo, distance) => {
-        if(this.state === ONCONN) {
-            let carInfos = laneInfo.carInfos;
-            if(carInfos.some(carInfo => {
-                if(this.id === carInfo.id) return false;
-                if(carInfo.isQueued()) return false;
-                let x = carInfo.x;
-                if(this.x <= x && x - carInfo.length < this.x + distance) return true;
-                return false;
-            })) return false;
-
-            let controlInfos = laneInfo.controlInfos;
-            if(controlInfos.some(controlInfo => {
-                if(controlInfo.isOpened()) return false;
-                let x = controlInfo.x;
-                if(this.x <= x && x < this.x + distance) return true;
-                return false;
-            })) return false;
-
-            if(laneInfo.length < this.x + distance) {
-                let carInfos = laneInfo.nextInfo.carInfos;
-                if(carInfos.some(carInfo => {
-                    if(this.id === carInfo.id) return false;
-                    if(carInfo.isQueued()) return false;
-                    let x = laneInfo.length + carInfo.x;
-                    if(this.x <= x && x - carInfo.length < this.x + distance) return true;
-                    return false;
-                })) return false;
-
-                let controlInfos = laneInfo.nextInfo.controlInfos;
-                if(controlInfos.some(controlInfo => {
-                    if(controlInfo.isOpened()) return false;
-                    let x = laneInfo.length + controlInfo.x;
-                    if(this.x <= x && x < this.x + distance) return true;
-                    return false;
-                })) return false;
-            }
-        }
-        else {
+        if(this.state === ONLANE || this.state === LANECHANGING) {
             let carInfos = laneInfo.carInfos;
             if(carInfos.some(carInfo => {
                 if(this.id === carInfo.id) return false;
@@ -193,7 +124,7 @@ export class CarInfo {
                 if(this.x <= x && x < this.x + distance) return true;
                 return false;
             })) return false;
-
+            
             if(!!this.destConnInfo && laneInfo.length < this.x + distance) {
                 let carInfos = this.destConnInfo.carInfos;
                 if(carInfos.some(carInfo => {
@@ -203,7 +134,7 @@ export class CarInfo {
                     if(this.x <= x && x - carInfo.length < this.x + distance) return true;
                     return false;
                 })) return false;
-
+                
                 let controlInfos = this.destConnInfo.controlInfos;
                 if(controlInfos.some(controlInfo => {
                     if(controlInfo.isOpened()) return false;
@@ -211,7 +142,7 @@ export class CarInfo {
                     if(this.x <= x && x < this.x + distance) return true;
                     return false;
                 })) return false;
-
+    
                 if(laneInfo.length + this.destConnInfo.length < this.x + distance) {
                     let carInfos = this.destConnInfo.nextInfo.carInfos;
                     if(carInfos.some(carInfo => {
@@ -232,21 +163,62 @@ export class CarInfo {
                 }
             }
         }
+        else if(this.state === ONCONN) {
+            let carInfos = laneInfo.carInfos;
+            if(carInfos.some(carInfo => {
+                if(this.id === carInfo.id) return false;
+                if(carInfo.isQueued()) return false;
+                let x = carInfo.x;
+                if(this.x <= x && x - carInfo.length < this.x + distance) return true;
+                return false;
+            })) return false;
+            
+            let controlInfos = laneInfo.controlInfos;
+            if(controlInfos.some(controlInfo => {
+                if(controlInfo.isOpened()) return false;
+                let x = controlInfo.x;
+                if(this.x <= x && x < this.x + distance) return true;
+                return false;
+            })) return false;
+
+            if(laneInfo.length < this.x + distance) {
+                let carInfos = laneInfo.nextInfo.carInfos;
+                if(carInfos.some(carInfo => {
+                    if(this.id === carInfo.id) return false;
+                    if(carInfo.isQueued()) return false;
+                    let x = laneInfo.length + carInfo.x;
+                    if(this.x <= x && x - carInfo.length < this.x + distance) return true;
+                    return false;
+                })) return false;
+                
+                let controlInfos = laneInfo.nextInfo.controlInfos;
+                if(controlInfos.some(controlInfo => {
+                    if(controlInfo.isOpened()) return false;
+                    let x = laneInfo.length + controlInfo.x;
+                    if(this.x <= x && x < this.x + distance) return true;
+                    return false;
+                })) return false;
+            }
+        }
         
         return true;
     }
 
     isChangable = laneInfo => {
+        //존재하지 않는 레인
         if(!laneInfo) return false;
+        //목적지로 연결되지 않는 레인
         if(!laneInfo.nextInfos.some(connInfo => {
             return (connInfo.nextInfo.roadInfo.id === this.destConnInfo.nextInfo.roadInfo.id);
         })) return false;
+        //레인 시작에 너무 가까움 (거리: 0)
         if(this.x - this.length < 0) return false;
+        //레인 끝에 너무 가까움 (거리: safeDistance)
         if(this.roadInfo.length < this.x + this.safeDistance) return false;
-
+        
         let carInfos = laneInfo.carInfos;
         let controlInfos = laneInfo.controlInfos;
-
+        
         if(carInfos.some(carInfo => {
             if(this.id === carInfo.id) return false;
             if(carInfo.isQueued()) return false;
@@ -254,13 +226,13 @@ export class CarInfo {
             if(carInfo.x <= this.x && this.x - this.length < carInfo.x + this.dangerDistance) return true;
             return false;
         })) return false;
-
+        
         if(controlInfos.some(controlInfo => {
             if(controlInfo.isOpened()) return false;
             if(this.x <= controlInfo.x && controlInfo.x < this.x + this.safeDistance) return true;
             return false;
         })) return false;
-
+        
         return true;
     }
 
@@ -272,17 +244,17 @@ export class CarInfo {
         this.v += this.a * dt;
         this.v = Math.min(this.v, this.maxV, this.roadInfo.speedLimit);
     }
-
+    
     deccelerate = dt => {
         this.v -= this.d * dt;
         this.v = Math.max(this.v, 0);
     }
-
+    
     brake = dt => {
         this.v -= this.b * dt;
         this.v = Math.max(this.v, 0);
     }
-
+    
     tryLaneChange = () => {
         if(this.isChangable(this.laneInfo.leftLaneInfo())) {
             this.state = LANECHANGING;
@@ -295,13 +267,65 @@ export class CarInfo {
             this.nextLaneInfo.carInfos.push(this);
         }
     }
-
+    
     isRemoved = () => {
         return this.state === REMOVED;
     }
-
+    
     isQueued = () => {
         return this.state === QUEUED;
+    }
+    
+    move = dt => {
+        this.x += this.v * dt;
+    }
+    
+    updatePosition = () => {
+        let p;
+        if(this.state === ONLANE || this.state === LANECHANGING) {
+            p = this.laneInfo.getPosition(this.x, this.y, this.length, this.breadth);
+        }
+        else if(this.state === ONCONN) {
+            p = this.connInfo.getPosition(this.x, this.length, this.breadth);
+        }
+        this.left = p.left;
+        this.top = p.top;
+        this.angle = p.angle;
+        this.zIndex = p.zIndex + 3;
+    }
+
+    updateLane = () => {
+        if(this.state === ONLANE || this.state === LANECHANGING) {
+            if(this.x > this.laneInfo.length) {
+                if(!!this.destConnInfo) {
+                    let idx = this.laneInfo.carInfos.findIndex(carInfo => carInfo.id === this.id);
+                    if(idx !== undefined) this.laneInfo.carInfos.splice(idx, 1);
+                    this.state = ONCONN;
+                    this.connInfo = this.destConnInfo;
+                    this.connInfo.carInfos.push(this);
+                    this.x = 0;
+                    this.laneChangeRate = 0;
+                    this.y = 0;
+                }
+                else {
+                    this.state = REMOVED;
+                }
+            }
+        }
+        else if(this.state === ONCONN) {
+            if(this.x > this.connInfo.length) {
+                let idx = this.connInfo.carInfos.findIndex(carInfo => carInfo.id === this.id);
+                if(idx !== undefined) this.connInfo.carInfos.splice(idx, 1);
+                this.state = ONLANE;
+                this.laneInfo = this.connInfo.nextInfo;
+                this.roadInfo = this.laneInfo.roadInfo;
+                this.laneInfo.carInfos.push(this);
+                this.destConnInfo = randomSelect(this.laneInfo.nextInfos);
+                this.x = 0;
+                this.laneChangeRate = 0;
+                this.y = 0;
+            }
+        }
     }
 
     progress = (dt) => {
@@ -373,12 +397,14 @@ export class ControlInfo {
         this.id = ControlInfo.count++;
 
         if(!!laneInfo.roadInfo) {
+            //레인
             this.laneInfo = laneInfo;
             this.roadInfo = laneInfo.roadInfo;
             laneInfo.controlInfos.push(this);
             this.breadth = laneInfo.breadth;
         }
         else {
+            //커넥션
             this.connInfo = laneInfo;
             laneInfo.controlInfos.push(this);
             this.breadth = laneInfo.breadth;
@@ -390,6 +416,16 @@ export class ControlInfo {
         this.duration = duration;
 
         this.t = period - delay;
+        
+        /*
+        roadInfo: 콘트롤이 속한 로드 정보
+        laneInfo: 콘트롤이 속한 레인 정보
+        connInfo: 콘트롤이 속한 커넥션 정보
+        period: 전체 주기
+        delay: 주기 시작 틱
+        duration: 통제(빨간불) 시간
+        t: 현재 틱
+        */
     }
 
     updatePosition = () => {
@@ -447,6 +483,7 @@ export class ConnInfo {
         this.isStraight = !p;
 
         if(this.isStraight) {
+            //직선 커넥션
             this.line = new Line(l1.p2.x, l1.p2.y, l2.p1.x, l2.p1.y);
             this.length = this.line.length();
             let c = this.line.center();
@@ -455,6 +492,7 @@ export class ConnInfo {
             this.angle = this.line.angle();
         }
         else {
+            //휘어진 커넥션
             let a = Vector.outerProd(l1.d, l2.d) > 0;
             let isOnL1 = (l1.p1.x < l1.p2.x && p.x < l1.p2.x) || (l1.p2.x < l1.p1.x && l1.p2.x < p.x) || (l1.p1.y < l1.p2.y && p.y < l1.p2.y) || (l1.p2.y < l1.p1.y && l1.p2.y < p.y);
             let isOnL2 = (l2.p1.x < l2.p2.x && l2.p1.x < p.x) || (l2.p2.x < l2.p1.x && p.x < l2.p1.x) || (l2.p1.y < l2.p2.y && l2.p1.y < p.y) || (l2.p2.y < l2.p1.y && p.y < l2.p1.y);
@@ -531,6 +569,23 @@ export class ConnInfo {
 
             this.length = this.length1 + this.length2 + this.length3;
         }
+
+        /*
+        isStraight: 직선/휘어진 커넥션 여부
+    
+        line, length, left, top, angle: 직선 정보
+    
+        line1, length1, left1, top1, angle1: 파트1 정보
+        center, radius, left2, top2, width2, height2, angle2, 
+        line21, line22, angle21, angle22: 파트2 정보 (호, 부채꼴)
+        line3, length3, left3, top3, angle3: 파트3 정보
+        length: 총 길이
+    
+        prevInfo: 이전 레인 정보
+        nextInfo: 다음 레인 정보
+        carInfos: 커넥션에 속한 차량 정보, 매번 업데이트
+        controlInfos: 커넥션에 속한 콘트롤 정보
+        */
     }
 
     reset = () => {
@@ -540,6 +595,7 @@ export class ConnInfo {
     getPosition = (x, width, height) => {
         let left, top, angle;
         if(this.isStraight) {
+            //직선 커넥션
             let l = this.line;
             let d = l.dir();
             let c = l.p1.add(d.mul(x - width / 2));
@@ -548,6 +604,7 @@ export class ConnInfo {
             angle = this.angle;
         }
         else {
+            //휘어진 커넥션
             if(x < this.length1) {
                 let l = this.line1;
                 let d = l.dir();
@@ -613,6 +670,16 @@ export class LaneInfo {
         let y = laneIdx * roadInfo.laneWidth + this.breadth / 2 - roadInfo.breadth / 2;
         let vec = roadInfo.line.dir().rot(Math.PI / 2).mul(y);
         this.line = roadInfo.line.parallelTranslation(vec);
+
+        /*
+        line, length, left, top, angle: 직선 정보
+
+        roadInfo: 레인이 속한 로드 정보
+        laneIdx: 레인 번호
+        carInfos: 레인에 속한 차량 정보, 차선 변경 중인 차는 중복됨, 매번 업데이트
+        controlInfos: 레인에 속한 콘트롤 정보
+        nextInfos: 다음 커넥션 정보
+        */
     }
 
     leftLaneInfo = () => {
@@ -632,6 +699,7 @@ export class LaneInfo {
         let d = l.dir();
         let c = l.p1.add(d.mul(x - width / 2));
         if(y !== 0) {
+            //차선 변경
             c = c.add(d.rot(Math.PI / 2).mul(y));
         }
         let left = c.x - width / 2;
@@ -677,6 +745,14 @@ export class RoadInfo {
         for(let i=0; i<lane; i++) {
             this.laneInfos.push(new LaneInfo(this, i));
         }
+
+        /*
+        line, length, left, top, angle: 직선 정보
+
+        lane: 로드에 속한 레인 수
+        speedLimit: 로드 속도 제한
+        laneInfos: 로드에 속한 레인 정보
+        */
     }
 
     reset = () => {
@@ -768,6 +844,11 @@ export class CarGenInfo {
         
         this.laneInfo = laneInfo;
         this.prob = prob;
+
+        /*
+        laneInfo: 차량 생성할 레인 정보
+        prob: 틱당 차량 생성 확률
+        */
     }
 
     generateCar = carInfos => {

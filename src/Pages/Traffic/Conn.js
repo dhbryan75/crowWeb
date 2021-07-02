@@ -49,7 +49,7 @@ class Conn extends React.Component {
             
             let a = connInfo.isClockwise ? connInfo.angle22 : connInfo.angle21;
             let b = Math.PI - connInfo.angle2;
-            let sector2Style;
+            
             const sector1WrapperStyle = {
                 position: "absolute",
                 left: 0,
@@ -61,6 +61,7 @@ class Conn extends React.Component {
                 overflow: "hidden",
             }
 
+            let sector2Style;
             if(connInfo.angle2 > Math.PI) {
                 b += Math.PI;
                 let c = (connInfo.isClockwise ? connInfo.angle21 : connInfo.angle22) - Math.PI;
