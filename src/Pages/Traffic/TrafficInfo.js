@@ -280,20 +280,6 @@ export class CarInfo {
         this.x += this.v * dt;
     }
     
-    updatePosition = () => {
-        let p;
-        if(this.state === ONLANE || this.state === LANECHANGING) {
-            p = this.laneInfo.getPosition(this.x, this.y, this.length, this.breadth);
-        }
-        else if(this.state === ONCONN) {
-            p = this.connInfo.getPosition(this.x, this.length, this.breadth);
-        }
-        this.left = p.left;
-        this.top = p.top;
-        this.angle = p.angle;
-        this.zIndex = p.zIndex + 3;
-    }
-
     updateLane = () => {
         if(this.state === ONLANE || this.state === LANECHANGING) {
             if(this.x > this.laneInfo.length) {
@@ -326,6 +312,20 @@ export class CarInfo {
                 this.y = 0;
             }
         }
+    }
+    
+    updatePosition = () => {
+        let p;
+        if(this.state === ONLANE || this.state === LANECHANGING) {
+            p = this.laneInfo.getPosition(this.x, this.y, this.length, this.breadth);
+        }
+        else if(this.state === ONCONN) {
+            p = this.connInfo.getPosition(this.x, this.length, this.breadth);
+        }
+        this.left = p.left;
+        this.top = p.top;
+        this.angle = p.angle;
+        this.zIndex = p.zIndex + 3;
     }
 
     progress = (dt) => {
@@ -385,6 +385,8 @@ export class CarInfo {
 
         this.move(dt);
         this.updateLane();
+        if(this.isRemoved()) return;
+        
         this.updatePosition();
     }
 };
@@ -820,7 +822,7 @@ export class CarGenInfo {
             d: 3,
             b: 40,
             maxV: 60,
-            laneChangeV: 0.2,
+            laneChangeV: 0.25,
             safeDistance: 100,
             dangerDistance: 70,
         }, 
@@ -833,7 +835,7 @@ export class CarGenInfo {
             d: 3,
             b: 40,
             maxV: 55,
-            laneChangeV: 0.15,
+            laneChangeV: 0.2,
             safeDistance: 90,
             dangerDistance: 60,
         }, 
