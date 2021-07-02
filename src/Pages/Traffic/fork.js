@@ -1,4 +1,6 @@
-var roadInfos = [
+import { RoadInfo, CarGenInfo, ControlInfo, ConnInfo } from "./TrafficInfo";
+
+export var roadInfos = [
     new RoadInfo(
         -400, -100, 
         -900, -100, 
@@ -61,7 +63,7 @@ var roadInfos = [
     ),
 ];
 
-var connInfos = [
+export var connInfos = [
     new ConnInfo(
         roadInfos[1].laneInfos[0], 
         roadInfos[3].laneInfos[0],
@@ -88,9 +90,9 @@ var connInfos = [
     ),
 ];
 
-var carInfos = [];
+export var carInfos = [];
 
-var controlInfos = [
+export var controlInfos = [
     new ControlInfo(
         connInfos[0],
         0,
@@ -114,8 +116,7 @@ var controlInfos = [
     ),
 ];
 
-
-var carGenInfos = [
+export var carGenInfos = [
     new CarGenInfo(
         roadInfos[1].laneInfos[0],
         0.01,

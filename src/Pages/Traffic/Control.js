@@ -13,8 +13,7 @@ class Control extends React.Component {
             transform: `rotate(${controlInfo.angle}rad)`,
             zIndex: controlInfo.zIndex,
             width: controlInfo.width(),
-            height: controlInfo.width(),
-            borderRadius: "50%",
+            height: controlInfo.breadth,
             background: controlInfo.isOpened() ? "#0f0" : "#f00",
         }
 

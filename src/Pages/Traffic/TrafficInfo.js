@@ -7,10 +7,14 @@ const LANECHANGING = 2;
 const ONCONN = 3;
 const REMOVED = -1;
 
+const borderWidth = 8;
+const laneWidth = 40;
+const laneBorderWidth = 2;
+
 export class CarInfo {
     static count = 0;
 
-    constructor(laneInfo, length, breadth, colors, a, d, b, maxV, laneChangeV, safeDistance, dangerDistance, initV) {
+    constructor(laneInfo, length, breadth, colors, a, d, b, maxV, laneChangeV, safeDistance, dangerDistance) {
         this.id = CarInfo.count++;
         this.state = QUEUED;
         
@@ -29,7 +33,7 @@ export class CarInfo {
         this.safeDistance = safeDistance;
         this.dangerDistance = dangerDistance;
 
-        this.v = initV;
+        this.v = 0;
         this.x = 0;
 
         this.nextLaneInfo = laneInfo;
@@ -114,7 +118,10 @@ export class CarInfo {
             this.laneInfo = this.nextLaneInfo;
             this.laneChangeRate = 0;
             this.y = 0;
-            this.destConnInfo = randomSelect(this.laneInfo.nextInfos);
+            this.destConnInfo = this.laneInfo.nextInfos.find(connInfo => {
+                return connInfo.nextInfo.roadInfo.id === this.destConnInfo.nextInfo.roadInfo.id;
+            });
+            
         }
     }
 
@@ -369,10 +376,12 @@ export class ControlInfo {
             this.laneInfo = laneInfo;
             this.roadInfo = laneInfo.roadInfo;
             laneInfo.controlInfos.push(this);
+            this.breadth = laneInfo.breadth;
         }
         else {
             this.connInfo = laneInfo;
             laneInfo.controlInfos.push(this);
+            this.breadth = laneInfo.breadth;
         }
 
         this.x = x;
@@ -386,10 +395,10 @@ export class ControlInfo {
     updatePosition = () => {
         let p;
         if(!!this.laneInfo) {
-            p = this.laneInfo.getPosition(this.x, 0, this.width(), this.width());
+            p = this.laneInfo.getPosition(this.x, 0, this.width(), this.breadth);
         }
         else {
-            p = this.connInfo.getPosition(this.x, this.width(), this.width());
+            p = this.connInfo.getPosition(this.x, this.width(), this.breadth);
         }
         this.left = p.left;
         this.top = p.top;
@@ -411,7 +420,7 @@ export class ControlInfo {
     }
 
     width = () => {
-        return this.remainTime() * 0.05;
+        return this.remainTime() * 0.03;
     }
 }
 
@@ -433,7 +442,6 @@ export class ConnInfo {
 
         let l1 = this.prevInfo.line;
         let l2 = this.nextInfo.line;
-
         
         let p = Line.intersection(l1, l2);
         this.isStraight = !p;
@@ -491,31 +499,37 @@ export class ConnInfo {
             let q2 = l2.p1.add(l2.dir().mul(-this.length3));
             let r2 = q2.add(l2.dir().rot(Math.PI / 2));
             let m2 = new Line(q2.x, q2.y, r2.x, r2.y);
+            let b = m2.angle() - m1.angle();
     
             this.center = Line.intersection(m1, m2);
             this.radius = Vector.dist(this.center, q1);
             this.left2 = this.center.x - this.radius - this.breadth / 2;
             this.top2 = this.center.y - this.radius - this.breadth / 2;
+            this.width2 = (this.radius + this.breadth / 2) * 2;
+            this.height2 = (this.radius + this.breadth / 2) * 2;
+            
+            this.angle2 = this.isClockwise ? b : -b;
+            if(this.angle2 < 0) this.angle2 += Math.PI * 2;
+            this.length2 = this.radius * this.angle2;
     
-            let b = this.isClockwise ? (m2.angle() - m1.angle()) : (m1.angle() - m2.angle());
-            if(b < 0) b += Math.PI * 2;
-            this.length2 = this.radius * b;
-            this.length = this.length1 + this.length2 + this.length3;
-    
+            this.line21 = new Line(this.center.x, this.center.y, q1.x, q1.y);
+            this.line22 = new Line(this.center.x, this.center.y, q2.x, q2.y);
+            this.angle21 = this.line21.angle();
+            this.angle22 = this.line22.angle();
+
             this.line1 = new Line(l1.p2.x, l1.p2.y, q1.x, q1.y);
             let c1 = this.line1.center();
             this.left1 = c1.x - this.length1 / 2;
             this.top1 = c1.y - this.breadth / 2;
             this.angle1 = l1.angle();
     
-            this.line21 = new Line(this.center.x, this.center.y, q1.x, q1.y);
-            this.line22 = new Line(this.center.x, this.center.y, q2.x, q2.y);
-    
             this.line3 = new Line(q2.x, q2.y, l2.p1.x, l2.p1.y); 
             let c3 = this.line3.center();
             this.left3 = c3.x - this.length3 / 2;
             this.top3 = c3.y - this.breadth / 2;
             this.angle3 = l2.angle();
+
+            this.length = this.length1 + this.length2 + this.length3;
         }
     }
 
@@ -639,7 +653,7 @@ export class LaneInfo {
 export class RoadInfo {
     static count = 0;
 
-    constructor(x1, y1, x2, y2, zIndex, lane, speedLimit, borderWidth, laneWidth, laneBorderWidth) {
+    constructor(x1, y1, x2, y2, zIndex, lane, speedLimit) {
         this.id = RoadInfo.count++;
         this.line = new Line(x1, y1, x2, y2);
         this.zIndex = zIndex;
@@ -694,7 +708,6 @@ export class CarGenInfo {
             laneChangeV: 0.3,
             safeDistance: 140,
             dangerDistance: 90,
-            initV: 30,
         }, 
         {
             name: "yellowCar",
@@ -708,13 +721,12 @@ export class CarGenInfo {
             laneChangeV: 0.3,
             safeDistance: 140,
             dangerDistance: 90,
-            initV: 30,
         }, 
         {
-            name: "greenCar",
+            name: "blueCar",
             length: 45,
             breadth: 22,
-            colors: {body: "#8f8"},
+            colors: {body: "#aaf"},
             a: 25,
             d: 3,
             b: 40,
@@ -722,7 +734,6 @@ export class CarGenInfo {
             laneChangeV: 0.3,
             safeDistance: 140,
             dangerDistance: 90,
-            initV: 30,
         }, 
         {
             name: "grayTruck",
@@ -736,7 +747,6 @@ export class CarGenInfo {
             laneChangeV: 0.2,
             safeDistance: 100,
             dangerDistance: 70,
-            initV: 30,
         }, 
         {
             name: "redBus",
@@ -750,7 +760,6 @@ export class CarGenInfo {
             laneChangeV: 0.15,
             safeDistance: 90,
             dangerDistance: 60,
-            initV: 30,
         }, 
     ];
 
@@ -777,7 +786,6 @@ export class CarGenInfo {
             carProp.laneChangeV,
             carProp.safeDistance,
             carProp.dangerDistance,
-            carProp.initV,
         ));
     }
 }
