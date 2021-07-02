@@ -64,7 +64,10 @@ export class CarInfo {
     }
 
     registerCar = () => {
-        if(this.state === ONLANE) {
+        if(this.state === QUEUED) {
+            this.laneInfo.carInfos.push(this);
+        }
+        else if(this.state === ONLANE) {
             this.laneInfo.carInfos.push(this);
         }
         else if(this.state === ONCONN) {
@@ -208,7 +211,7 @@ export class CarInfo {
         //존재하지 않는 레인
         if(!laneInfo) return false;
         //목적지로 연결되지 않는 레인
-        if(!laneInfo.nextInfos.some(connInfo => {
+        if(!!this.destConnInfo && !laneInfo.nextInfos.some(connInfo => {
             return (connInfo.nextInfo.roadInfo.id === this.destConnInfo.nextInfo.roadInfo.id);
         })) return false;
         //레인 시작에 너무 가까움 (거리: 0)
@@ -386,7 +389,7 @@ export class CarInfo {
         this.move(dt);
         this.updateLane();
         if(this.isRemoved()) return;
-        
+
         this.updatePosition();
     }
 };
@@ -784,7 +787,7 @@ export class CarGenInfo {
             b: 40,
             maxV: 70,
             laneChangeV: 0.3,
-            safeDistance: 140,
+            safeDistance: 100,
             dangerDistance: 90,
         }, 
         {
@@ -797,7 +800,7 @@ export class CarGenInfo {
             b: 40,
             maxV: 70,
             laneChangeV: 0.3,
-            safeDistance: 140,
+            safeDistance: 100,
             dangerDistance: 90,
         }, 
         {
@@ -810,7 +813,7 @@ export class CarGenInfo {
             b: 40,
             maxV: 70,
             laneChangeV: 0.3,
-            safeDistance: 140,
+            safeDistance: 100,
             dangerDistance: 90,
         }, 
         {
