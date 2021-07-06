@@ -146,8 +146,6 @@ export var connInfos = [
     ),
 ];
 
-export var carInfos = [];
-
 export var controlInfos = [
     new ControlInfo(
         connInfos[1],
@@ -319,3 +317,5 @@ export var carGenInfos = [
         0.007,
     ),
 ];
+
+export var carInfos = [];

@@ -38,6 +38,10 @@ export class Vector {
         return new Vector(this.x + v.x, this.y + v.y);
     }
 
+    sub = v => {
+        return new Vector(this.x - v.x, this.y - v.y);
+    }
+
     mul = c => {
         return new Vector(this.x * c, this.y * c);
     }

@@ -4,9 +4,10 @@ class Car extends React.Component {
     render() {
         const {
             carInfo,
+            isSelecting,
         } = this.props;
 
-        const carStyle = {
+        let carStyle = {
             position: "absolute",
             left: carInfo.left,
             top: carInfo.top,
@@ -15,17 +16,23 @@ class Car extends React.Component {
             width: carInfo.length,
             height: carInfo.breadth,
         }
-        
+        if(isSelecting) {
+            carStyle["opacity"] = carInfo.isSelected() ? 1 : 0.5;
+        }
+
         const bodyStyle = {
             width: carInfo.length,
             height: carInfo.breadth,
             background: carInfo.colors.body,
-            borderRadius: 7,
-            border: "solid 2px #000",
+            borderRadius: 5,
         }
 
         return (
-            <div className="car" style={carStyle}>
+            <div 
+                className="car" 
+                onClick={isSelecting ? carInfo.onClick : undefined}
+                style={carStyle}
+            >
                 <div className="body" style={bodyStyle}>
 
                 </div>

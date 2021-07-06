@@ -4,9 +4,10 @@ class Control extends React.Component {
     render() {
         const {
             controlInfo,
+            isSelecting,
         } = this.props;
 
-        const controlStyle = {
+        let controlStyle = {
             position: "absolute",
             left: controlInfo.left,
             top: controlInfo.top,
@@ -16,9 +17,12 @@ class Control extends React.Component {
             height: controlInfo.breadth,
             background: controlInfo.isOpened() ? "#0f0" : "#f00",
         }
+        if(isSelecting) {
+            controlStyle["opacity"] = controlInfo.isSelected() ? 1 : 0.5;
+        }
 
         return (
-            <div className="control" style={controlStyle}>
+            <div className="control" onClick={isSelecting ? controlInfo.onClick : undefined} style={controlStyle}>
             </div>
         )
     }

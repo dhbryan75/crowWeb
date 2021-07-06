@@ -13,6 +13,7 @@ const laneBorderWidth = 2;
 
 export class CarInfo {
     static count = 0;
+    static selected = [];
 
     constructor(laneInfo, length, breadth, colors, a, d, b, maxV, laneChangeV, safeDistance, dangerDistance) {
         this.id = CarInfo.count++;
@@ -41,6 +42,7 @@ export class CarInfo {
         this.nextLaneInfo = laneInfo;
         this.laneChangeRate = 0;
         this.y = 0;
+
 
         /*
         state: 차량 현재 상태 (int)
@@ -84,14 +86,20 @@ export class CarInfo {
         this.y = this.roadInfo.laneWidth * this.laneChangeRate * (this.nextLaneInfo.laneIdx - this.laneInfo.laneIdx);
         if(this.laneChangeRate >= 1) {
             let idx = this.laneInfo.carInfos.findIndex(carInfo => carInfo.id === this.id);
-            if(idx !== undefined) this.laneInfo.carInfos.splice(idx, 1);
+            if(idx !== -1) this.laneInfo.carInfos.splice(idx, 1);
             this.state = ONLANE;
             this.laneInfo = this.nextLaneInfo;
             this.laneChangeRate = 0;
             this.y = 0;
-            this.destConnInfo = this.laneInfo.nextInfos.find(connInfo => {
-                return connInfo.nextInfo.roadInfo.id === this.destConnInfo.nextInfo.roadInfo.id;
-            });
+            if(!!this.destConnInfo) {
+                this.destConnInfo = this.laneInfo.nextInfos.find(connInfo => {
+                    return connInfo.nextInfo.roadInfo.id === this.destConnInfo.nextInfo.roadInfo.id;
+                });
+            }
+            else {
+                this.destConnInfo = randomSelect(this.laneInfo.nextInfos);
+            }
+
             
         }
     }
@@ -279,6 +287,14 @@ export class CarInfo {
         return this.state === QUEUED;
     }
     
+    isOnRoad = () => {
+        return this.state === QUEUED || this.state === ONLANE || this.state === LANECHANGING;
+    }
+
+    isOnConn = () => {
+        return this.state === ONCONN;
+    }
+
     move = dt => {
         this.x += this.v * dt;
     }
@@ -288,7 +304,7 @@ export class CarInfo {
             if(this.x > this.laneInfo.length) {
                 if(!!this.destConnInfo) {
                     let idx = this.laneInfo.carInfos.findIndex(carInfo => carInfo.id === this.id);
-                    if(idx !== undefined) this.laneInfo.carInfos.splice(idx, 1);
+                    if(idx !== -1) this.laneInfo.carInfos.splice(idx, 1);
                     this.state = ONCONN;
                     this.connInfo = this.destConnInfo;
                     this.connInfo.carInfos.push(this);
@@ -304,7 +320,7 @@ export class CarInfo {
         else if(this.state === ONCONN) {
             if(this.x > this.connInfo.length) {
                 let idx = this.connInfo.carInfos.findIndex(carInfo => carInfo.id === this.id);
-                if(idx !== undefined) this.connInfo.carInfos.splice(idx, 1);
+                if(idx !== -1) this.connInfo.carInfos.splice(idx, 1);
                 this.state = ONLANE;
                 this.laneInfo = this.connInfo.nextInfo;
                 this.roadInfo = this.laneInfo.roadInfo;
@@ -331,7 +347,7 @@ export class CarInfo {
         this.zIndex = p.zIndex + 3;
     }
 
-    progress = (dt) => {
+    update = (dt) => {
         if(this.state === QUEUED) {
             if(this.isReady()) {
                 this.state = ONLANE;
@@ -392,11 +408,26 @@ export class CarInfo {
 
         this.updatePosition();
     }
+
+    onClick = e => {
+        let idx = CarInfo.selected.findIndex(carInfo => carInfo.id === this.id);
+        if(idx === -1) {
+            CarInfo.selected.push(this);
+        }
+        else {
+            CarInfo.selected.splice(idx, 1);
+        }
+    }
+
+    isSelected = () => {
+        return CarInfo.selected.includes(this);
+    }
 };
 
 
 export class ControlInfo {
     static count = 0;
+    static selected = [];
 
     constructor(laneInfo, x, period, delay, duration) {
         this.id = ControlInfo.count++;
@@ -419,9 +450,8 @@ export class ControlInfo {
         this.period = period;
         this.delay = delay;
         this.duration = duration;
+        this.t = 0;
 
-        this.t = period - delay;
-        
         /*
         roadInfo: 콘트롤이 속한 로드 정보
         laneInfo: 콘트롤이 속한 레인 정보
@@ -447,8 +477,8 @@ export class ControlInfo {
         this.zIndex = p.zIndex + 2;
     }
 
-    progress = () => {
-        this.t = (this.t + 1) % this.period;
+    update = iteration => {
+        this.t = (iteration + this.period - this.delay) % this.period;
         this.updatePosition();
     }
     
@@ -463,18 +493,34 @@ export class ControlInfo {
     width = () => {
         return this.remainTime() * 0.03;
     }
+
+    onClick = e => {
+        let idx = ControlInfo.selected.findIndex(controlInfo => controlInfo.id === this.id);
+        if(idx === -1) {
+            ControlInfo.selected.push(this);
+        }
+        else {
+            ControlInfo.selected.splice(idx, 1);
+        }
+    }
+
+    isSelected = () => {
+        return ControlInfo.selected.includes(this);
+    }
 }
 
 
 
 export class ConnInfo {
     static count = 0;
+    static selected = [];
 
     constructor(prevInfo, nextInfo) {
         this.id = ConnInfo.count++;
         this.prevInfo = prevInfo;
         this.nextInfo = nextInfo;
         prevInfo.nextInfos.push(this);
+        nextInfo.prevInfos.push(this);
         this.zIndex = (prevInfo.zIndex + nextInfo.zIndex) / 2;
         this.breadth = prevInfo.breadth;
         
@@ -647,12 +693,27 @@ export class ConnInfo {
             zIndex: zIndex,
         };
     }
+
+    onClick = e => {
+        let idx = ConnInfo.selected.findIndex(connInfo => connInfo.id === this.id);
+        if(idx === -1) {
+            ConnInfo.selected.push(this);
+        }
+        else {
+            ConnInfo.selected.splice(idx, 1);
+        }
+    }
+
+    isSelected = () => {
+        return ConnInfo.selected.includes(this);
+    }
 }
 
 
 
 export class LaneInfo {
     static count = 0;
+    static selected = [];
     
     constructor(roadInfo, laneIdx) {
         this.id = LaneInfo.count++;
@@ -670,7 +731,9 @@ export class LaneInfo {
 
         this.carInfos = [];
         this.controlInfos = [];
+        this.prevInfos = [];
         this.nextInfos = [];
+        this.carGenInfo = null;
 
         let y = laneIdx * roadInfo.laneWidth + this.breadth / 2 - roadInfo.breadth / 2;
         let vec = roadInfo.line.dir().rot(Math.PI / 2).mul(y);
@@ -719,12 +782,27 @@ export class LaneInfo {
             zIndex: zIndex,
         };
     }
+
+    onClick = e => {
+        let idx = LaneInfo.selected.findIndex(laneInfo => laneInfo.id === this.id);
+        if(idx === -1) {
+            LaneInfo.selected.push(this);
+        }
+        else {
+            LaneInfo.selected.splice(idx, 1);
+        }
+    }
+
+    isSelected = () => {
+        return LaneInfo.selected.includes(this);
+    }
 }
 
 
 
 export class RoadInfo {
     static count = 0;
+    static selected = [];
 
     constructor(x1, y1, x2, y2, zIndex, lane, speedLimit) {
         this.id = RoadInfo.count++;
@@ -743,8 +821,6 @@ export class RoadInfo {
         this.left = c.x - this.length / 2;
         this.top = c.y - this.breadth / 2 - borderWidth;
         this.angle = this.line.angle();
-
-        this.isSelected = false;
 
         this.laneInfos = [];
         for(let i=0; i<lane; i++) {
@@ -766,8 +842,18 @@ export class RoadInfo {
         });
     }
 
-    toggleIsSelected = () => {
-        this.isSelected ^= true;
+    onClick = e => {
+        let idx = RoadInfo.selected.findIndex(roadInfo => roadInfo.id === this.id);
+        if(idx === -1) {
+            RoadInfo.selected.push(this);
+        }
+        else {
+            RoadInfo.selected.splice(idx, 1);
+        }
+    }
+
+    isSelected = () => {
+        return RoadInfo.selected.includes(this);
     }
 };
 
@@ -848,7 +934,10 @@ export class CarGenInfo {
         this.id = CarGenInfo.count++;
         
         this.laneInfo = laneInfo;
+        this.roadInfo = laneInfo.roadInfo;
         this.prob = prob;
+
+        laneInfo.carGenInfo = this;
 
         /*
         laneInfo: 차량 생성할 레인 정보

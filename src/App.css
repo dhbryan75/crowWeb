@@ -1,0 +1,16 @@
+input {
+    display: block;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+    box-sizing: none;
+    appearance: none;
+}
+
+input:focus {
+    outline: unset;
+}
+
+label {
+    display: inherit;
+}

@@ -4,17 +4,21 @@ class Lane extends React.Component {
     render() {
         const {
             laneInfo,
+            isSelecting,
         } = this.props;
 
-        const laneStyle = {
+        let laneStyle = {
             position: "absolute",
             left: laneInfo.left,
             top: laneInfo.top,
             zIndex: laneInfo.zIndex,
             width: laneInfo.length,
             height: laneInfo.breadth,
-            background: "#444",
+            background: "#333",
             borderBottom: !laneInfo.rightLaneInfo() ? "unset" : `dotted ${laneInfo.borderWidth}px #fff`,
+        }
+        if(isSelecting) {
+            laneStyle["opacity"] = laneInfo.isSelected() ? 1 : 0.5;
         }
 
         const arrowStyle = {
@@ -29,7 +33,7 @@ class Lane extends React.Component {
 
 
         return (
-            <div className="lane" style={laneStyle}>
+            <div className="lane" onClick={isSelecting ? laneInfo.onClick : undefined} style={laneStyle}>
                 <div className="arrow" style={arrowStyle}/>
             </div>
         );

@@ -6,9 +6,11 @@ class Road extends React.Component {
     render() {
         const {
             roadInfo,
+            isSelecting,
+            isSelectingLane,
         } = this.props;
 
-        const roadStyle = {
+        let roadStyle = {
             position: "absolute",
             left: roadInfo.left,
             top: roadInfo.top,
@@ -16,19 +18,23 @@ class Road extends React.Component {
             zIndex: roadInfo.zIndex,
             width: roadInfo.length,
             height: roadInfo.breadth,
-            background: "#444",
             borderTop: `solid ${roadInfo.borderWidth}px #000`,
             borderBottom: `solid ${roadInfo.borderWidth}px #000`,
-            opacity: roadInfo.isSelected ? 0.7 : 1,
-            transition: ".5s",
         };
+        if(isSelecting) {
+            roadStyle["opacity"] = roadInfo.isSelected() ? 1 : 0.5;
+        }
         
         let lanes = roadInfo.laneInfos.map(laneInfo => {
-            return <Lane key={laneInfo.id} laneInfo={laneInfo}/>
+            return <Lane 
+                key={laneInfo.id} 
+                laneInfo={laneInfo}
+                isSelecting={isSelectingLane}
+            />
         });
 
         return (
-            <div className="road" style={roadStyle} onClick={roadInfo.toggleIsSelected}>
+            <div className="road" onClick={isSelecting ? roadInfo.onClick : undefined} style={roadStyle}>
                 {lanes}
             </div>
         );
