@@ -1,141 +1,156 @@
 import React from "react";
 
-import "./Bird.css";
-
-
 class Bird extends React.Component {
     render() {
         const { 
             isRight,
             size,
             colors,
+            wingDy,
         } = this.props;
 
-        const birdStyle = {
+        let bodyStyle = {
+            position: "absolute",
             width: size,
             height: size,
-        };
-        const bodyStyle = {
-            width: size,
-            height: size,
+            borderRadius: "20%",
             background: colors.body,
         };
-        const eyeStyle = {
+
+        let eyeStyle = {
+            position: "absolute",
+            top: "20%",
+            width: "15%",
+            height: "35%",
+            borderRadius: "50% / 21%",
             background: colors.eye,
         };
-        const leftEyeStyle = isRight ? {
-            left: "60%",
-        } : {
-            right: "60%",
+
+        let leftEyeStyle = {
+            ...eyeStyle,
         };
-        const rightEyeStyle = isRight ? {
-            left: "80%",
-        } : {
-            right: "80%",
+        leftEyeStyle[isRight ? "left" : "right"] = "60%";
+        
+        let rightEyeStyle = {
+            ...eyeStyle,
         };
-        const pupilStyle = {
+        rightEyeStyle[isRight ? "left" : "right"] = "80%";
+
+        let pupilStyle = {
+            position: "absolute",
+            top: "30%",
+            width: "5%",
+            height: "15%",
+            borderRadius: "50% / 20%",
             background: colors.pupil,
         };
-        const leftPupilStyle = isRight ? {
-            left: "67.5%",
-        } : {
-            right: "67.5%",
+
+        let leftPupilStyle = {
+            ...pupilStyle,
         };
-        const rightPupilStyle = isRight ? {
-            left: "87.5%",
-        } : {
-            right: "87.5%",
+        leftPupilStyle[isRight ? "left" : "right"] = "67.5%"
+
+        let rightPupilStyle = {
+            ...pupilStyle,
         };
-        const beakStyle = isRight ? {
-            left: "75%",
-            borderLeft: `solid ${0.2 * size}px ${colors.beak}`,
+        rightPupilStyle[isRight ? "left" : "right"] = "87.5%"
+
+        let beakStyle = {
+            position: "absolute",
+            top: "50%",
             borderTop: `solid ${0.1 * size}px transparent`,
             borderBottom: `solid ${0.1 * size}px transparent`,
-            borderRadius: "50% 0 0 50%",
-        } : {
-            right: "75%",
-            borderRight: `solid ${0.2 * size}px ${colors.beak}`,
-            borderTop: `solid ${0.1 * size}px transparent`,
-            borderBottom: `solid ${0.1 * size}px transparent`,
-            borderRadius: "0 50% 50% 0",
         };
-        const wing1Style = isRight ? {
-            left: "-10%",
-            borderRadius: "100% 0 0 0",
-            background: colors.wing1,
-        } : {
-            right: "-10%",
-            borderRadius: "0 100% 0 0",
+        beakStyle[isRight ? "left" : "right"] = "75%";
+        beakStyle[isRight ? "borderLeft" : "borderRight"] = `solid ${0.2 * size}px ${colors.beak}`;
+        beakStyle["borderRadius"] = isRight ? "50% 0 0 50%" : "0 50% 50% 0";
+
+        let wing1Style = {
+            position: "absolute",
+            top: `${40 - (wingDy || 0)}%`,
+            width: "50%",
+            height: "50%",
             background: colors.wing1,
         };
-        const wing2Style = isRight ? {
-            left: "40%",
-            borderRadius: "0 100% 100% 0 / 0 30% 30% 0",
+        wing1Style[isRight ? "left" : "right"] = "-10%";
+        wing1Style["borderRadius"] = isRight ? "100% 0 0 0" : "0 100% 0 0";
+
+        let wing2Style = {
+            position: "absolute",
+            top: `${40 - (wingDy || 0)}%`,
+            width: "15%",
+            height: "50%",
             background: colors.wing2,
-        } : {
-            right: "40%",
-            borderRadius: "100% 0 0 100% / 30% 0 0 30%",
-            background: colors.wing2,
         };
-        const hairStyle = {};
-        const leftHairStyle = isRight ? {
-            left: "40%",
+        wing2Style[isRight ? "left" : "right"] = "40%";
+        wing2Style["borderRadius"] = isRight ? "0 100% 100% 0 / 0 30% 30% 0" : "100% 0 0 100% / 30% 0 0 30%";
+
+        let hairStyle = {
+            position: "absolute",
+            top: "-10%",
+            width: "5%",
+            height: "5%",
             borderTop: `solid ${0.05 * size}px ${colors.hair}`,
-            borderRight: `solid ${0.05 * size}px ${colors.hair}`,
-            borderRadius: "0 100% 0 0",
-        } : {
-            right: "40%",
-            borderTop: `solid ${0.05 * size}px ${colors.hair}`,
-            borderLeft: `solid ${0.05 * size}px ${colors.hair}`,
-            borderRadius: "100% 0 0 0",
-        };
-        const rightHairStyle = isRight ? {
-            left: "45%",
-            borderTop: `solid ${0.05 * size}px ${colors.hair}`,
-            borderLeft: `solid ${0.05 * size}px ${colors.hair}`,
-            borderRadius: "100% 0 0 0",
-        } : {
-            right: "45%",
-            borderTop: `solid ${0.05 * size}px ${colors.hair}`,
-            borderRight: `solid ${0.05 * size}px ${colors.hair}`,
-            borderRadius: "0 100% 0 0",
-        };
-        const legStyle = {
-            background: colors.leg,
-        };
-        const leftLegStyle = isRight ? {
-            left: "45%",
-        } : {
-            right: "45%",
-        };
-        const rightLegStyle = isRight ? {
-            left: "55%",
-        } : {
-            right: "55%",
-        };
-        const feetStyle = isRight ? {
-            left: "40%",
-            background: colors.feet,
-        } : {
-            right: "40%",
-            background: colors.feet,
         };
 
+        let leftHairStyle = {
+            ...hairStyle,
+        };
+        leftHairStyle[isRight ? "left" : "right"] = "40%";
+        leftHairStyle[isRight ? "borderRight" : "borderLeft"] = `solid ${0.05 * size}px ${colors.hair}`;
+        leftHairStyle["borderRadius"] = isRight ? "0 100% 0 0" : "100% 0 0 0";
+        
+        let rightHairStyle = {
+            ...hairStyle,
+        };
+        rightHairStyle[isRight ? "left" : "right"] = "45%";
+        rightHairStyle[isRight ? "borderLeft" : "borderRight"] = `solid ${0.05 * size}px ${colors.hair}`;
+        rightHairStyle["borderRadius"] = isRight ? "100% 0 0 0" : "0 100% 0 0";
+        
+
+        let legStyle = {
+            position: "absolute",
+            top: "100%",
+            width: "5%",
+            height: "5%",
+            background: colors.leg,
+        };
+
+        let leftLegStyle = {
+            ...legStyle,
+        };
+        leftLegStyle[isRight ? "left" : "right"] = "45%";
+        
+        let rightLegStyle = {
+            ...legStyle,
+        };
+        rightLegStyle[isRight ? "left" : "right"] = "55%";
+
+        let feetStyle = {
+            position: "absolute",
+            top: "105%",
+            width: "25%",
+            height: "5%",
+            borderRadius: "20% 20% 0 0 / 100% 100% 0 0",
+            background: colors.feet,
+        };
+        feetStyle[isRight ? "left" : "right"] = "40%";
+
         return (
-            <div className="bird" style={birdStyle}>
+            <div className="bird">
                 <div className="body" style={bodyStyle}>
-                    <div className="left eye" style={{...eyeStyle, ...leftEyeStyle}}/>
-                    <div className="right eye" style={{...eyeStyle, ...rightEyeStyle}}/>
-                    <div className="left pupil" style={{...pupilStyle, ...leftPupilStyle}}/>
-                    <div className="right pupil" style={{...pupilStyle, ...rightPupilStyle}}/>
+                    <div className="left eye" style={leftEyeStyle}/>
+                    <div className="right eye" style={rightEyeStyle}/>
+                    <div className="left pupil" style={leftPupilStyle}/>
+                    <div className="right pupil" style={rightPupilStyle}/>
                     <div className="beak" style={beakStyle}/>
                     <div className="wing1" style={wing1Style}/>
                     <div className="wing2" style={wing2Style}/>
-                    <div className="left hair" style={{...hairStyle, ...leftHairStyle}}/>
-                    <div className="right hair" style={{...hairStyle, ...rightHairStyle}}/>
-                    <div className="left leg" style={{...legStyle, ...leftLegStyle}}/>
-                    <div className="right leg" style={{...legStyle, ...rightLegStyle}}/>
-                    <div className="feet"style={feetStyle}/>
+                    <div className="left hair" style={leftHairStyle}/>
+                    <div className="right hair" style={rightHairStyle}/>
+                    <div className="left leg" style={leftLegStyle}/>
+                    <div className="right leg" style={rightLegStyle}/>
+                    <div className="feet" style={feetStyle}/>
                 </div>
             </div>
         );
