@@ -154,8 +154,7 @@ modes[ADDROAD] = {
             key: "zIndex",
             name: "높이",
             type: "number",
-            step: 10,
-            value: 10,
+            value: 1,
         },
         {
             key: "lane",
@@ -425,7 +424,7 @@ modes[ADDCARGEN] = {
             key: "prob",
             name: "틱당 생성 확률",
             type: "number",
-            step: 0.01,
+            step: 0.001,
             value: 0.005,
         },
     ],
@@ -889,7 +888,7 @@ const onMouseDown = e => {
     if(e.button === 0) {
         isMouseDown = true;
         if(currMode === ADDROAD) {
-            let p = new Vector(e.clientX, e.clientY).sub(screenCenter).sub(new Vector(screenWidth / 2, screenHeight / 2));
+            let p = new Vector(e.clientX, e.clientY).add(screenCenter).sub(new Vector(screenWidth / 2, screenHeight / 2));
             if(!roadStart) {
                 roadStart = p;
             }
@@ -913,7 +912,7 @@ const onMouseUp = e => {
 const onMouseMove = e => {
     if(!isMouseDown) return;
     let d = new Vector(e.movementX, e.movementY);
-    screenCenter = screenCenter.add(d);
+    screenCenter = screenCenter.sub(d);
 }
 
 const onMouseOut = e => {
@@ -928,16 +927,16 @@ const onKeyDown = e => {
     downKeys.push(e.code);
 
     if(e.code === "KeyW" || e.code === "ArrowUp") {
-        screenV = screenV.add(new Vector(0, screenMoveSpeed));
+        screenV.move(new Vector(0, -screenMoveSpeed));
     } 
     else if(e.code === "KeyA" || e.code === "ArrowLeft") {
-        screenV = screenV.add(new Vector(screenMoveSpeed, 0));
+        screenV.move(new Vector(-screenMoveSpeed, 0));
     } 
     else if(e.code === "KeyS" || e.code === "ArrowDown") {
-        screenV = screenV.add(new Vector(0, -screenMoveSpeed));
+        screenV.move(new Vector(0, screenMoveSpeed));
     }
     else if(e.code === "KeyD" || e.code === "ArrowRight") {
-        screenV = screenV.add(new Vector(-screenMoveSpeed, 0));
+        screenV.move(new Vector(screenMoveSpeed, 0));
     }
 }
 
@@ -949,16 +948,16 @@ const onKeyUp = e => {
     downKeys.splice(idx, 1);
 
     if(e.code === "KeyW" || e.code === "ArrowUp") {
-        screenV = screenV.add(new Vector(0, -screenMoveSpeed));
+        screenV.move(new Vector(0, screenMoveSpeed));
     } 
     else if(e.code === "KeyA" || e.code === "ArrowLeft") {
-        screenV = screenV.add(new Vector(-screenMoveSpeed, 0));
+        screenV.move(new Vector(screenMoveSpeed, 0));
     } 
     else if(e.code === "KeyS" || e.code === "ArrowDown") {
-        screenV = screenV.add(new Vector(0, screenMoveSpeed));
+        screenV.move(new Vector(0, -screenMoveSpeed));
     }
     else if(e.code === "KeyD" || e.code === "ArrowRight") {
-        screenV = screenV.add(new Vector(screenMoveSpeed, 0));
+        screenV.move(new Vector(-screenMoveSpeed, 0));
     }
 }
 
@@ -991,7 +990,7 @@ const update = iteration => {
         }
     }
 
-    screenCenter = screenCenter.add(screenV);
+    screenCenter.move(screenV);
 };
 
 
@@ -1053,8 +1052,8 @@ class TrafficPage extends React.Component {
 
         const screenStyle = {
             position: "absolute",
-            left: screenCenter.x + width / 2,
-            top: screenCenter.y + height / 2,
+            left: width / 2 - screenCenter.x,
+            top: height / 2 - screenCenter.y,
             zIndex: 0,
         }
 
@@ -1130,8 +1129,8 @@ class TrafficPage extends React.Component {
                     style={screenStyle}
                 >
                     <div className="background" style={backgroundStyle}/>
-                    {isShowConnOn && conns}
                     {isShowRoadOn && roads}
+                    {isShowConnOn && conns}
                     {isShowCarOn && cars}
                     {isShowControlOn && controls}
                     {

@@ -8,6 +8,7 @@ class Conn extends React.Component {
         } = this.props;
 
         let connStyle = {
+            position: "absolute",
             zIndex: connInfo.zIndex,
         }
         if(isSelecting) {

@@ -582,10 +582,10 @@ export class ConnInfo {
                 }
                 this.isClockwise = a;
             }
-            let q1 = l1.p2.add(l1.dir().mul(this.length1));
+            let q1 = l1.p2.add(l1.dir(this.length1));
             let r1 = q1.add(l1.dir().rot(Math.PI / 2));
             let m1 = new Line(q1.x, q1.y, r1.x, r1.y);
-            let q2 = l2.p1.add(l2.dir().mul(-this.length3));
+            let q2 = l2.p1.add(l2.dir(-this.length3));
             let r2 = q2.add(l2.dir().rot(Math.PI / 2));
             let m2 = new Line(q2.x, q2.y, r2.x, r2.y);
             let b = m2.angle() - m1.angle();
@@ -648,8 +648,8 @@ export class ConnInfo {
         if(this.isStraight) {
             //직선 커넥션
             let l = this.line;
-            let d = l.dir();
-            let c = l.p1.add(d.mul(x - width / 2));
+            let d = l.dir(x - width / 2);
+            let c = l.p1.add(d);
             left = c.x - width / 2;
             top = c.y - height / 2;
             angle = this.angle;
@@ -658,8 +658,8 @@ export class ConnInfo {
             //휘어진 커넥션
             if(x < this.length1) {
                 let l = this.line1;
-                let d = l.dir();
-                let c = l.p1.add(d.mul(x - width / 2));
+                let d = l.dir(x - width / 2);
+                let c = l.p1.add(d);
                 left = c.x - width / 2;
                 top = c.y - height / 2;
                 angle = this.angle1;
@@ -668,7 +668,7 @@ export class ConnInfo {
                 x -= this.length1;
                 let a = x / this.radius;
                 let r = this.line21.d.rot(this.isClockwise ? a : -a);
-                let d = r.dir().rot(this.isClockwise ? Math.PI/2 : -Math.PI/2).mul(-width / 2);
+                let d = r.dir(-width / 2).rot(this.isClockwise ? Math.PI/2 : -Math.PI/2);
                 let c = this.center.add(r).add(d);
                 left = c.x - width / 2;
                 top = c.y - height / 2;
@@ -677,8 +677,8 @@ export class ConnInfo {
             else {
                 x -= this.length1 + this.length2;
                 let l = this.line3;
-                let d = l.dir();
-                let c = l.p1.add(d.mul(x - width / 2));
+                let d = l.dir(x - width / 2);
+                let c = l.p1.add(d);
                 left = c.x - width / 2;
                 top = c.y - height / 2;
                 angle = this.angle3;
@@ -736,7 +736,7 @@ export class LaneInfo {
         this.carGenInfo = null;
 
         let y = laneIdx * roadInfo.laneWidth + this.breadth / 2 - roadInfo.breadth / 2;
-        let vec = roadInfo.line.dir().rot(Math.PI / 2).mul(y);
+        let vec = roadInfo.line.dir(y).rot(Math.PI / 2);
         this.line = roadInfo.line.parallelTranslation(vec);
 
         /*

@@ -19,7 +19,7 @@ export class Vector {
     }
 
     static dif = (v1, v2) => {
-        return new Vector(v1.x - v2.x, v1.y - v2.y);
+        return new Vector(v2.x - v1.x, v2.y - v1.y);
     }
 
     static dist = (v1, v2) => {
@@ -32,6 +32,11 @@ export class Vector {
 
     static outerProd = (v1, v2) => {
         return v1.x * v2.y - v1.y * v2.x;
+    }
+
+    move = v => {
+        this.x += v.x;
+        this.y += v.y;
     }
 
     add = v => {
@@ -52,8 +57,10 @@ export class Vector {
         return new Vector(cos * this.x - sin * this.y, sin * this.x + cos * this.y);
     }
 
-    dir = () => {
-        return this.mul(1 / this.size());
+    dir = (size) => {
+        let s = this.size();
+        if(s === 0) return new Vector(0, size || 1);
+        return this.mul((size || 1) / s);
     }
 
     size = () => {
@@ -73,7 +80,7 @@ export class Line {
     constructor(x1, y1, x2, y2) {
         this.p1 = new Vector(x1, y1);
         this.p2 = new Vector(x2, y2);
-        this.d = Vector.dif(this.p2, this.p1);
+        this.d = Vector.dif(this.p1, this.p2);
         this.a = this.d.x === 0 ? null : (this.d.y / this.d.x);
         this.b = this.d.x === 0 ? null : (y1 - this.a * x1);
     }
@@ -109,8 +116,8 @@ export class Line {
         return this.d.angle();
     }
 
-    dir = () => {
-        return this.d.mul(1 / this.length());
+    dir = (size) => {
+        return this.d.mul((size || 1) / this.length());
     }
 
     parallelTranslation = v => {
@@ -123,21 +130,42 @@ export class Line {
         return new Line(this.p1.x, this.p1.y, this.p2.x, this.p2.y);
     }
 }
+
+export class FixedSpring {
+    constructor(fixedPos, object, k, b) {
+        this.fixedPos = fixedPos;
+        this.object = object;
+        this.k = k;
+        this.b = b;
+        this.initDist = Vector.dist(fixedPos, object.p);
+    }
+
+    force = () => {
+        let dif = Vector.dif(this.fixedPos, this.object.p);
+        let x = dif.size() - this.initDist;
+        let v = this.object.v.size();
+        let f = dif.dir(-this.k * x - this.b * v);
+        this.object.force(f);
+    }
+}
+
 export class Object {
     constructor(x, y, vx, vy, m) {
         this.p = new Vector(x, y);
         this.v = new Vector(vx, vy);
-        this.a = Vector(0, 0);
+        this.a = new Vector(0, 0);
         this.m = m;
     }
 
     force = f => {
-        this.a = f.mul(1 / this.m);
+        this.a.move(f.mul(1 / this.m));
     }
 
     move = dt => {
-        this.v = this.v.add(this.a.mul(dt));
-        this.p = this.p.add(this.v.mul(dt));
+        this.v.move(this.a.mul(dt));
+        this.p.move(this.v.mul(dt));
+        this.a.x = 0;
+        this.a.y = 0;
     }
 }
 
