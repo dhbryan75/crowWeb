@@ -9,6 +9,7 @@ import Header from './Pages/Common/Header';
 import Footer from './Pages/Common/Footer';
 import HomePage from './Pages/Home/';
 import TrafficPage from './Pages/Traffic/';
+import BirdPage from './Pages/Bird/';
 import './App.css';
 
 class App extends React.Component {
@@ -35,8 +36,11 @@ class App extends React.Component {
                 <Header />
                 <Router>
                     <Switch>
-                        <Route path="/traffic">
+                        <Route exact path="/traffic">
                             <TrafficPage width={width} height={height} />
+                        </Route>
+                        <Route exact path="/bird">
+                            <BirdPage width={width} height={height} />
                         </Route>
                         <Route path="/">
                             <HomePage width={width} height={height} />

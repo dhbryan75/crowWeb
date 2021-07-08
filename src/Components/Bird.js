@@ -7,14 +7,16 @@ class Bird extends React.Component {
             size,
             colors,
             wingDy,
+            pupilDy,
         } = this.props;
 
         let bodyStyle = {
             position: "absolute",
             width: size,
             height: size,
-            borderRadius: "20%",
+            borderRadius: "25%",
             background: colors.body,
+            boxShadow: `0 0 ${size * 0.1}px`,
         };
 
         let eyeStyle = {
@@ -38,7 +40,7 @@ class Bird extends React.Component {
 
         let pupilStyle = {
             position: "absolute",
-            top: "30%",
+            top: `${30 - (pupilDy || 0)}%`,
             width: "5%",
             height: "15%",
             borderRadius: "50% / 20%",
@@ -137,21 +139,19 @@ class Bird extends React.Component {
         feetStyle[isRight ? "left" : "right"] = "40%";
 
         return (
-            <div className="bird">
-                <div className="body" style={bodyStyle}>
-                    <div className="left eye" style={leftEyeStyle}/>
-                    <div className="right eye" style={rightEyeStyle}/>
-                    <div className="left pupil" style={leftPupilStyle}/>
-                    <div className="right pupil" style={rightPupilStyle}/>
-                    <div className="beak" style={beakStyle}/>
-                    <div className="wing1" style={wing1Style}/>
-                    <div className="wing2" style={wing2Style}/>
-                    <div className="left hair" style={leftHairStyle}/>
-                    <div className="right hair" style={rightHairStyle}/>
-                    <div className="left leg" style={leftLegStyle}/>
-                    <div className="right leg" style={rightLegStyle}/>
-                    <div className="feet" style={feetStyle}/>
-                </div>
+            <div className="body" style={bodyStyle}>
+                <div className="left eye" style={leftEyeStyle}/>
+                <div className="right eye" style={rightEyeStyle}/>
+                <div className="left pupil" style={leftPupilStyle}/>
+                <div className="right pupil" style={rightPupilStyle}/>
+                <div className="beak" style={beakStyle}/>
+                <div className="wing1" style={wing1Style}/>
+                <div className="wing2" style={wing2Style}/>
+                <div className="left hair" style={leftHairStyle}/>
+                <div className="right hair" style={rightHairStyle}/>
+                <div className="left leg" style={leftLegStyle}/>
+                <div className="right leg" style={rightLegStyle}/>
+                <div className="feet" style={feetStyle}/>
             </div>
         );
     }

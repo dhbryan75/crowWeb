@@ -4,8 +4,6 @@ import { Object, FixedSpring, Vector } from "../../Assets/Physic2D";
 import { delay } from "../../Assets/Functions";
 
 import Hexagon from "../../Components/Hexagon";
-import { isCompositeComponent } from "react-dom/test-utils";
-import zIndex from "@material-ui/core/styles/zIndex";
 
 
 
@@ -38,26 +36,26 @@ const hexagonInfos = [
         index: "01",
         color: "#8f8",
         link: "/traffic",
-        title: "Traffic",
-        desc: "User interactive traffic simulation.",
+        title: "Cars",
+        desc: "User interactive traffic simulation page.",
     },
     {
         x: 7,
         y: 14,
         index: "02",
-        color: "#0ff",
-        link: "/u1",
-        title: "Untitled1",
-        desc: "untitled1.",
+        color: "#ff0",
+        link: "/bird",
+        title: "Birds",
+        desc: "Introducing the cute bird characters. Crow, Parrot, Flamingo, and Chicken.",
     },
     {
         x: 7,
         y: 16,
         index: "03",
         color: "#f0f",
-        link: "/u2",
-        title: "Untitled2",
-        desc: "untitled2.",
+        link: "/u03",
+        title: "Untitled",
+        desc: "untitled.",
     },
 ];
 
@@ -66,7 +64,7 @@ var hexagonGrid = [];
 for(let i=0; i<gridN; i++) {
     hexagonGrid.push([]);
     for(let j=0; j<gridM; j++) {
-        let x = 3 * hexagonGap * i + (j % 2 == 0 ? hexagonGap * 1.5 : 0);
+        let x = 3 * hexagonGap * i + (j % 2 === 0 ? hexagonGap * 1.5 : 0);
         let y = verticalRatio * 0.866 * hexagonGap * j;
         let center = new Vector(x, y);
         let left = x - hexagonSize;
@@ -113,6 +111,8 @@ var expandSize = hexagonSize;
 const expandSpeed = 70;
 const expandEndSize = 1500;
 
+var isUpdated = false;
+
 
 const isStop = object => {
     return -stopMinY < object.p.y && object.p.y < stopMinY && -stopMinVy < object.v.y && object.v.y < stopMinVy;
@@ -121,6 +121,7 @@ const isStop = object => {
 
 
 const update = () => {
+    isUpdated = false;
     hexagonGrid.forEach(hexagonList => {
         hexagonList.forEach(hexagon => {
             if(!hexagon.isMoving) {
@@ -135,9 +136,11 @@ const update = () => {
                 hexagon.object.v.y = 0;
                 hexagon.isMoving = false;
             }
+            isUpdated = true;
         });
     });
     if(isExpanding) {
+        isUpdated = true;
         expandSize += expandSpeed;
         if(expandSize > expandEndSize) {
             document.location.href = hexagonGrid[selectedX][selectedY].link;
@@ -157,10 +160,12 @@ class HomePage extends React.Component {
     animate = async() => {
         for(let iteration = 0; iteration < (refreshPeriod / interval); iteration++) {
             update();
-            this.setState({
-                ...this.state,
-                hexagonGrid,
-            })
+            if(isUpdated) {
+                this.setState({
+                    ...this.state,
+                    hexagonGrid,
+                });
+            }
             await delay(interval);
         }
         window.location.reload();
@@ -210,6 +215,8 @@ class HomePage extends React.Component {
 
                 const onMouseOver = e => {
                     hexagon.isMouseOver = true;
+                    selectedX = hexagon.x;
+                    selectedY = hexagon.y;
                     if(!hexagon.isMoving) {
                         hexagon.object.v.y += mouseOverVy;
                         hexagon.isMoving = true;
@@ -221,14 +228,8 @@ class HomePage extends React.Component {
                 }
 
                 const onClick = e => {
-                    if(hexagon.x === selectedX && hexagon.y === selectedY) {
-                        if(!!hexagon.index) {
-                            isExpanding = true;
-                        }
-                    }
-                    else {
-                        selectedX = hexagon.x;
-                        selectedY = hexagon.y;
+                    if(!!hexagon.index) {
+                        isExpanding = true;
                     }
                 }
 
@@ -309,10 +310,6 @@ class HomePage extends React.Component {
                 alignItem: "center",
                 justifyContent: "center",
             }
-
-            var onClickInterface = e => {
-                isExpanding = true;
-            }
         }
 
         return (
@@ -327,7 +324,6 @@ class HomePage extends React.Component {
                     isInterfaceOn &&
                     <div 
                         className="interface" 
-                        onClick={onClickInterface}
                         style={interfaceStyle}
                     >
                         <div className="index" style={indexStyle}>

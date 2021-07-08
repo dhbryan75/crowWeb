@@ -3,11 +3,11 @@ export const flamingoColors = {
     eye: "#000",
     pupil: "#fff",
     beak: "#ff0",
-    wing1: "#f9f",
-    wing2: "#f9f",
+    wing1: "#faf",
+    wing2: "#faf",
     hair: "#f6f",
     leg: "#fff",
-    feet: "#ff0",
+    feet: "#000",
 };
 
 export const crowColors = {
@@ -35,12 +35,12 @@ export const chickenColors = {
 };
 
 export const parrotColors = {
-    body: "#f66",
+    body: "#f55",
     eye: "#fff",
     pupil: "#000",
-    beak: "#444",
-    wing1: "#0ff",
-    wing2: "#ff0",
+    beak: "#222",
+    wing1: "#5ff",
+    wing2: "#ff5",
     hair: "#f66",
     leg: "#222",
     feet: "#ff0",
