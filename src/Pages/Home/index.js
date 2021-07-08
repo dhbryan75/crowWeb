@@ -1,6 +1,6 @@
 import React from "react";
 
-import { Object, FixedSpring, Vector } from "../../Assets/Physic2D";
+import { Mass, FixedSpring, Vector } from "../../Assets/Physic2D";
 import { delay } from "../../Assets/Functions";
 
 import Hexagon from "../../Components/Hexagon";
@@ -9,7 +9,7 @@ import Hexagon from "../../Components/Hexagon";
 
 
 const dt = 0.1;
-const interval = 5;
+const interval = 15;
 const refreshPeriod = 60 * 60 * 1000;
 
 
@@ -69,8 +69,8 @@ for(let i=0; i<gridN; i++) {
         let center = new Vector(x, y);
         let left = x - hexagonSize;
         let top = y - verticalRatio * 0.866 * hexagonSize;
-        let object = new Object(0, 0, 0, 0, hexagonMass);
-        let fixedSpring = new FixedSpring(new Vector(0, 0), object, K, B);
+        let mass = new Mass(0, 0, 0, 0, hexagonMass);
+        let fixedSpring = new FixedSpring(new Vector(0, 0), mass, K, B);
 
         hexagonGrid[i].push({
             x: i,
@@ -82,7 +82,7 @@ for(let i=0; i<gridN; i++) {
             zIndex: j,
             isMouseOver: false,
             isSelected: false,
-            object: object,
+            mass: mass,
             fixedSpring: fixedSpring,
             isMoving: false,
         });
@@ -109,13 +109,13 @@ var screenCenter = hexagonGrid[7][15].center.copy();
 var isExpanding = false;
 var expandSize = hexagonSize;
 const expandSpeed = 70;
-const expandEndSize = 1500;
+var expandEndSize = 1000;
 
 var isUpdated = false;
 
 
-const isStop = object => {
-    return -stopMinY < object.p.y && object.p.y < stopMinY && -stopMinVy < object.v.y && object.v.y < stopMinVy;
+const isStop = mass => {
+    return -stopMinY < mass.p.y && mass.p.y < stopMinY && -stopMinVy < mass.v.y && mass.v.y < stopMinVy;
 }
 
 
@@ -128,12 +128,12 @@ const update = () => {
                 return;
             }
             hexagon.fixedSpring.force();
-            hexagon.object.move(dt);
-            if(isStop(hexagon.object)) {
-                hexagon.object.p.x = 0;
-                hexagon.object.p.y = 0;
-                hexagon.object.v.x = 0;
-                hexagon.object.v.y = 0;
+            hexagon.mass.move(dt);
+            if(isStop(hexagon.mass)) {
+                hexagon.mass.p.x = 0;
+                hexagon.mass.p.y = 0;
+                hexagon.mass.v.x = 0;
+                hexagon.mass.v.y = 0;
                 hexagon.isMoving = false;
             }
             isUpdated = true;
@@ -181,6 +181,8 @@ class HomePage extends React.Component {
         const { 
             hexagonGrid,
         } = this.state;
+
+        expandEndSize = Math.max(width, height);
         
         const screenStyle = {
             position: "absolute",
@@ -200,8 +202,8 @@ class HomePage extends React.Component {
                     size = expandSize;
                 }
                 else {
-                    left =  hexagon.left + hexagon.object.p.x;
-                    top =  hexagon.top - hexagon.object.p.y;
+                    left =  hexagon.left + hexagon.mass.p.x;
+                    top =  hexagon.top - hexagon.mass.p.y;
                     zIndex = hexagon.zIndex;
                     size = hexagonSize;
                 }
@@ -218,7 +220,7 @@ class HomePage extends React.Component {
                     selectedX = hexagon.x;
                     selectedY = hexagon.y;
                     if(!hexagon.isMoving) {
-                        hexagon.object.v.y += mouseOverVy;
+                        hexagon.mass.v.y += mouseOverVy;
                         hexagon.isMoving = true;
                     }
                 }

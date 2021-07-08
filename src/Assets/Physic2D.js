@@ -149,7 +149,7 @@ export class FixedSpring {
     }
 }
 
-export class Object {
+export class Mass {
     constructor(x, y, vx, vy, m) {
         this.p = new Vector(x, y);
         this.v = new Vector(vx, vy);
@@ -169,7 +169,7 @@ export class Object {
     }
 }
 
-export class Circle extends Object {
+export class Circle extends Mass {
     constructor(x, y, vx, vy, m, r) {
         super(x, y, vx, vy, m);
         this.r = r;
@@ -184,7 +184,7 @@ export class Circle extends Object {
     }
 }
 
-export class box extends Object {
+export class box extends Mass {
     constructor(x, y, vx, vy, m, w, h, angle) {
         super(x, y, vx, vy, m);
         this.w = w;

@@ -98,14 +98,14 @@ class Bird extends React.Component {
         let leftHairStyle = {
             ...hairStyle,
         };
-        leftHairStyle[isRight ? "left" : "right"] = "40%";
+        leftHairStyle[isRight ? "left" : "right"] = "42.5%";
         leftHairStyle[isRight ? "borderRight" : "borderLeft"] = `solid ${0.05 * size}px ${colors.hair}`;
         leftHairStyle["borderRadius"] = isRight ? "0 100% 0 0" : "100% 0 0 0";
         
         let rightHairStyle = {
             ...hairStyle,
         };
-        rightHairStyle[isRight ? "left" : "right"] = "45%";
+        rightHairStyle[isRight ? "left" : "right"] = "47.5%";
         rightHairStyle[isRight ? "borderLeft" : "borderRight"] = `solid ${0.05 * size}px ${colors.hair}`;
         rightHairStyle["borderRadius"] = isRight ? "100% 0 0 0" : "0 100% 0 0";
         
@@ -121,12 +121,12 @@ class Bird extends React.Component {
         let leftLegStyle = {
             ...legStyle,
         };
-        leftLegStyle[isRight ? "left" : "right"] = "45%";
+        leftLegStyle[isRight ? "left" : "right"] = "42.5%";
         
         let rightLegStyle = {
             ...legStyle,
         };
-        rightLegStyle[isRight ? "left" : "right"] = "55%";
+        rightLegStyle[isRight ? "left" : "right"] = "52.5%";
 
         let feetStyle = {
             position: "absolute",
@@ -136,7 +136,7 @@ class Bird extends React.Component {
             borderRadius: "20% 20% 0 0 / 100% 100% 0 0",
             background: colors.feet,
         };
-        feetStyle[isRight ? "left" : "right"] = "40%";
+        feetStyle[isRight ? "left" : "right"] = "37.5%";
 
         return (
             <div className="body" style={bodyStyle}>

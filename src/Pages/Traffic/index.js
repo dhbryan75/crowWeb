@@ -1129,8 +1129,8 @@ class TrafficPage extends React.Component {
                     style={screenStyle}
                 >
                     <div className="background" style={backgroundStyle}/>
-                    {isShowRoadOn && roads}
                     {isShowConnOn && conns}
+                    {isShowRoadOn && roads}
                     {isShowCarOn && cars}
                     {isShowControlOn && controls}
                     {

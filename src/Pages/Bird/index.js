@@ -5,7 +5,7 @@ import { crowColors, parrotColors, flamingoColors, chickenColors } from "../../A
 import { delay } from "../../Assets/Functions";
 
 
-const interval = 10;
+const interval = 15;
 
 var birdSize = 0;
 
