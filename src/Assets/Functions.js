@@ -6,9 +6,14 @@ export const randomBool = prob => {
     return Math.random() < prob;
 };
 
-export const randomInt = (n, m) => {
-    return n + Math.floor(Math.random() * m);
+export const randomInt = (min, max) => {
+    if(min === max) return min;
+    return min + Math.floor((max - min + 1) * Math.random());
 };
+
+export const randomDouble = (min, max) => {
+    return min + (max - min) * Math.random();
+}
 
 export const randomSelect = l => {
     if(l.length === 0) return null;
