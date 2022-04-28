@@ -17,5 +17,5 @@ export const randomDouble = (min, max) => {
 
 export const randomSelect = l => {
     if(l.length === 0) return null;
-    return l[randomInt(0, l.length)];
+    return l[randomInt(0, l.length - 1)];
 }
